@@ -1,0 +1,58 @@
+# Security Testing & Vulnerability Checklist
+
+## 1. Injection & Code Execution
+- [ ] SSTI (Server-Side Template Injection) [previously noted as sstl]
+- [ ] NoSQL / SQL Injection
+- [ ] XSS (Cross-Site Scripting)
+- [ ] SSRF (Server-Side Request Forgery)
+- [ ] Path Traversal / LFI (Local File Inclusion)
+
+## 2. Denial of Service (DoS)
+- [ ] reDoS (Regular Expression DoS)
+- [ ] lpDoS (Logical/Payload DoS)
+
+## 3. Cryptography & Secrets
+- [ ] Secret Key Leaks
+- [ ] Weak Encryption
+
+## 4. API & Error Handling
+- [ ] API Vulnerabilities (General)
+- [ ] Bad Error Handling / Information Disclosure
+- [ ] Lack of Rate Limiting
+
+## 5. Client-Side & Session Attacks
+- [ ] Clipboard Attack
+- [ ] Replay Attack
+- [ ] CSRF (Cross-Site Request Forgery)
+- [ ] Clickjacking
+- [ ] CORS Misconfiguration
+
+## 6. Authentication & Authorization
+- [ ] IDOR (Insecure Direct Object Reference) / BOLA
+- [ ] Broken Authentication & Session Management
+- [ ] Mass Assignment
+
+## 7. Server & Business Logic
+- [ ] Security Misconfigurations (e.g., default passwords, exposed admin panels)
+- [ ] Vulnerable Dependencies (Known CVEs in packages/libraries)
+- [ ] Business Logic Vulnerabilities
+
+## 8. Mobile Application Security (Android/iOS)
+- [ ] Insecure Local Storage (Unencrypted SharedPreferences/SQLite)
+- [ ] Reverse Engineering & Lack of Obfuscation (e.g., missing ProGuard/R8)
+- [ ] Insecure Exported Components & Deep Links
+- [ ] Lack of Certificate Pinning (MitM Attack vulnerability)
+
+## 9. Network & HTTP Headers
+- [ ] Missing Security Headers (CSP, HSTS, X-Frame-Options, etc.)
+- [ ] Weak TLS/SSL Protocols (e.g., allowing TLS 1.0/1.1)
+
+## 10. Advanced API & JWT Security
+- [ ] JWT Misconfigurations (e.g., `alg: none`, weak signatures)
+- [ ] 2FA / OTP Bypass
+- [ ] GraphQL / OAuth / SSO Vulnerabilities
+
+## 11. Infrastructure, Cloud & DevSecOps
+- [ ] Cloud Misconfigurations (e.g., open AWS S3 buckets, exposed Firebase rules)
+- [ ] Insufficient Logging & Monitoring
+- [ ] Container / CI-CD Security (Hardcoded secrets in Docker or GitHub Actions)
