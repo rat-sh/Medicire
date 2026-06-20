@@ -1,0 +1,219 @@
+Medicire — Mobile App Project Structure
+Setting up a scalable, clean-architecture React Native CLI project structure matching the approved Figma designs (50 screens) with the full tech stack.
+
+Proposed Folder Structure
+
+Medicire/
+├── src/
+│   ├── app/
+│   │   └── index.tsx              # Root entry — sets up providers
+│   │
+│   ├── navigation/
+│   │   ├── RootNavigator.tsx      # Stack: Auth | Main
+│   │   ├── AuthNavigator.tsx      # Splash → Login → Signup → OTP → ...
+│   │   ├── MainNavigator.tsx      # Bottom Tab Navigator
+│   │   ├── HomeStackNavigator.tsx
+│   │   ├── SearchStackNavigator.tsx
+│   │   ├── RxStackNavigator.tsx   # Prescription flow
+│   │   ├── VaultStackNavigator.tsx
+│   │   ├── ReservationStackNavigator.tsx
+│   │   └── types.ts               # All RootParamList types
+│   │
+│   ├── screens/
+│   │   ├── auth/
+│   │   │   ├── SplashScreen.tsx
+│   │   │   ├── LoginScreen.tsx
+│   │   │   ├── SignupScreen.tsx
+│   │   │   ├── OtpScreen.tsx
+│   │   │   ├── LocationPermScreen.tsx
+│   │   │   └── ProfileSetupScreen.tsx
+│   │   ├── home/
+│   │   │   └── HomeScreen.tsx
+│   │   ├── search/
+│   │   │   ├── SearchScreen.tsx
+│   │   │   ├── SearchSuggestionsScreen.tsx
+│   │   │   ├── ResultsListScreen.tsx
+│   │   │   ├── ResultsMapScreen.tsx
+│   │   │   ├── PharmacyDetailScreen.tsx
+│   │   │   └── FullMapScreen.tsx
+│   │   ├── prescription/
+│   │   │   ├── RxUploadScreen.tsx
+│   │   │   ├── RxCropScreen.tsx
+│   │   │   ├── RxProgressScreen.tsx
+│   │   │   ├── RxOcrScreen.tsx
+│   │   │   ├── RxReviewScreen.tsx
+│   │   │   ├── RxResultsScreen.tsx
+│   │   │   └── RxCompareScreen.tsx
+│   │   ├── vault/
+│   │   │   ├── VaultScreen.tsx
+│   │   │   └── VaultDetailScreen.tsx
+│   │   ├── reservations/
+│   │   │   ├── ReservationConfirmScreen.tsx
+│   │   │   ├── ReservationStatusScreen.tsx  # handles pending/confirmed/ready/cancelled/completed
+│   │   │   └── ReservationTrackerScreen.tsx
+│   │   ├── account/
+│   │   │   ├── NotificationsScreen.tsx
+│   │   │   ├── ProfileScreen.tsx
+│   │   │   ├── SettingsScreen.tsx
+│   │   │   ├── AddressesScreen.tsx
+│   │   │   ├── ConditionsScreen.tsx
+│   │   │   ├── NotifPrefsScreen.tsx
+│   │   │   └── DeleteAccountScreen.tsx
+│   │   └── edge/
+│   │       ├── EdgeNoPharmacies.tsx
+│   │       ├── EdgeNoMedicine.tsx
+│   │       ├── EdgeOcrFail.tsx
+│   │       ├── EdgePoorImage.tsx
+│   │       ├── EdgeNetworkFail.tsx
+│   │       ├── EdgeLocationDenied.tsx
+│   │       ├── EdgeRsvRejected.tsx
+│   │       ├── EdgePharmacyClosed.tsx
+│   │       ├── EdgeOutOfStock.tsx
+│   │       ├── EdgePartial.tsx
+│   │       ├── EdgeMultiPharmacy.tsx
+│   │       ├── EdgeUploadTimeout.tsx
+│   │       ├── EdgeEmptyVault.tsx
+│   │       └── EdgeEmptyHistory.tsx
+│   │
+│   ├── components/
+│   │   ├── ui/                    # Reusable primitive components
+│   │   │   ├── Button.tsx
+│   │   │   ├── Input.tsx
+│   │   │   ├── Badge.tsx
+│   │   │   ├── Card.tsx
+│   │   │   ├── BottomSheet.tsx
+│   │   │   ├── EmptyState.tsx
+│   │   │   ├── LoadingSpinner.tsx
+│   │   │   └── StatusBarComponent.tsx
+│   │   ├── pharmacy/
+│   │   │   ├── PharmacyCard.tsx
+│   │   │   └── PharmacyMapPin.tsx
+│   │   ├── reservation/
+│   │   │   └── ReservationStatusBadge.tsx
+│   │   ├── prescription/
+│   │   │   └── OcrStageItem.tsx
+│   │   └── navigation/
+│   │       └── BottomNav.tsx
+│   │
+│   ├── store/                     # Zustand stores
+│   │   ├── authStore.ts
+│   │   ├── locationStore.ts
+│   │   ├── searchStore.ts
+│   │   └── reservationStore.ts
+│   │
+│   ├── services/                  # API + external services
+│   │   ├── api/
+│   │   │   ├── client.ts          # Axios base client
+│   │   │   ├── auth.ts
+│   │   │   ├── pharmacies.ts
+│   │   │   ├── medicines.ts
+│   │   │   ├── reservations.ts
+│   │   │   ├── prescriptions.ts
+│   │   │   └── notifications.ts
+│   │   ├── socket/
+│   │   │   └── socketClient.ts    # Socket.io client
+│   │   ├── storage/
+│   │   │   └── mmkv.ts            # MMKV storage instance
+│   │   └── cloudinary/
+│   │       └── upload.ts          # Image upload helper
+│   │
+│   ├── hooks/                     # Custom React hooks
+│   │   ├── useAuth.ts
+│   │   ├── useLocation.ts
+│   │   ├── usePharmacies.ts       # TanStack Query hooks
+│   │   ├── useReservations.ts
+│   │   ├── usePrescriptions.ts
+│   │   └── useSocket.ts
+│   │
+│   ├── types/                     # Global TypeScript types
+│   │   ├── api.ts
+│   │   ├── pharmacy.ts
+│   │   ├── medicine.ts
+│   │   ├── reservation.ts
+│   │   ├── prescription.ts
+│   │   └── user.ts
+│   │
+│   ├── constants/
+│   │   ├── theme.ts               # Colors, spacing, radius, typography from Figma
+│   │   ├── routes.ts              # Route name constants
+│   │   └── config.ts              # API URLs, Cloudinary keys, etc.
+│   │
+│   └── utils/
+│       ├── scale.ts               # Screen-size scaling utility
+│       ├── formatters.ts          # Distance, currency, date formatters
+│       └── validators.ts          # Zod schemas
+│
+├── android/
+├── ios/
+├── index.js                       # Entry point (unchanged)
+├── App.tsx                        # Replace with navigation root
+├── package.json
+├── tsconfig.json
+└── babel.config.js
+
+
+Packages to Install
+Core Navigation
+bash
+
+bun add @react-navigation/native @react-navigation/native-stack @react-navigation/bottom-tabs react-native-screens react-native-safe-area-context
+State Management
+bash
+
+bun add zustand
+Server State
+bash
+
+bun add @tanstack/react-query axios
+Forms & Validation
+bash
+
+bun add react-hook-form zod @hookform/resolvers
+Storage
+bash
+
+bun add react-native-mmkv
+Animations
+bash
+
+bun add react-native-reanimated react-native-gesture-handler
+Maps
+bash
+
+bun add react-native-maps
+Real-time
+bash
+
+bun add socket.io-client
+Image Picker & Upload
+bash
+
+bun add react-native-image-picker
+Icons
+bash
+
+bun add lucide-react-native react-native-svg
+Notifications (FCM)
+bash
+
+bun add @react-native-firebase/app @react-native-firebase/messaging
+Configuration Files to Create/Update
+File	What changes
+babel.config.js	Add Reanimated plugin (must be last)
+tsconfig.json	Add path aliases (@/)
+metro.config.js	Add SVG transformer
+src/constants/theme.ts	Extract all colors/spacing from Figma
+android/app/build.gradle	Add Firebase, MMKV config
+Build Order (Step by Step)
+Install all packages
+Setup babel.config.js — Reanimated plugin
+Setup tsconfig.json — path aliases
+Create src/constants/theme.ts — Figma tokens (colors, spacing, etc.)
+Create src/utils/scale.ts — responsive scaling
+Create src/services/storage/mmkv.ts — storage instance
+Create all Zustand stores (auth, location, search)
+Build navigation skeleton — all navigators with placeholder screens
+Wire up App.tsx → providers → navigators
+Build UI primitives (Button, Input, Badge, Card, etc.) from Figma
+Then build screens one by one, starting from Auth flow
+

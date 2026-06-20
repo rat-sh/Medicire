@@ -1,0 +1,138 @@
+/**
+ * SplashScreen.tsx
+ * Figma: "Splash Screen" — gradient bg, logo, tagline, dots
+ * Mock: N/A (no data needed)
+ * Real API: N/A
+ */
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withDelay,
+} from 'react-native-reanimated';
+import { Colors, FontSize, FontWeight, Spacing } from '@/constants/theme';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { AuthStackParamList } from '@/navigation/types';
+import { Routes } from '@/constants/routes';
+
+type Nav = NativeStackNavigationProp<AuthStackParamList, typeof Routes.SPLASH>;
+
+const SplashScreen: React.FC = () => {
+  const navigation = useNavigation<Nav>();
+
+  // Animations
+  const logoScale = useSharedValue(0.6);
+  const logoOpacity = useSharedValue(0);
+  const textOpacity = useSharedValue(0);
+  const dotOpacity = useSharedValue(0);
+
+  const logoStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: logoScale.value }],
+    opacity: logoOpacity.value,
+  }));
+  const textStyle = useAnimatedStyle(() => ({ opacity: textOpacity.value }));
+  const dotStyle = useAnimatedStyle(() => ({ opacity: dotOpacity.value }));
+
+  useEffect(() => {
+    logoScale.value = withSpring(1, { damping: 15 });
+    logoOpacity.value = withSpring(1);
+    textOpacity.value = withDelay(400, withSpring(1));
+    dotOpacity.value = withDelay(700, withSpring(1));
+
+    const t = setTimeout(() => navigation.replace(Routes.LOGIN), 2500);
+    return () => clearTimeout(t);
+  }, [navigation, logoScale, logoOpacity, textOpacity, dotOpacity]);
+
+  return (
+    <LinearGradient
+      colors={['#0b8f81', '#0d9e8f', '#065f56']}
+      style={styles.container}
+    >
+      <View style={styles.center}>
+        {/* Logo Icon */}
+        <Animated.View style={[styles.logoBox, logoStyle]}>
+          <View style={styles.logoInner}>
+            <View style={[styles.bar, styles.barTall]} />
+            <View style={[styles.bar, styles.barMid]} />
+            <View style={[styles.bar, styles.barShort]} />
+          </View>
+        </Animated.View>
+
+        {/* App name & tagline */}
+        <Animated.View style={[styles.textBlock, textStyle]}>
+          <Text style={styles.appName}>Medicire</Text>
+          <Text style={styles.tagline}>Medicine. Found. Fast.</Text>
+        </Animated.View>
+      </View>
+
+      {/* Bottom dots */}
+      <Animated.View style={[styles.dotsRow, dotStyle]}>
+        <View style={styles.dotSmall} />
+        <View style={styles.dotLarge} />
+        <View style={styles.dotSmall} />
+      </Animated.View>
+    </LinearGradient>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  center: { alignItems: 'center', gap: Spacing.xl },
+  logoBox: {
+    width: 80,
+    height: 80,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoInner: { flexDirection: 'row', alignItems: 'flex-end', gap: 4 },
+  bar: { width: 10, backgroundColor: Colors.textInverse, borderRadius: 5 },
+  barTall: { height: 32 },
+  barMid: { height: 20, opacity: 0.6 },
+  barShort: { height: 24, opacity: 0.8 },
+  textBlock: { alignItems: 'center', gap: 4 },
+  appName: {
+    fontSize: FontSize['4xl'],
+    fontWeight: FontWeight.bold,
+    color: Colors.textInverse,
+    letterSpacing: -0.5,
+  },
+  tagline: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
+    color: 'rgba(255,255,255,0.7)',
+  },
+  dotsRow: {
+    position: 'absolute',
+    bottom: 64,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  dotSmall: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.4)',
+  },
+  dotLarge: {
+    width: 16,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.textInverse,
+  },
+});
+
+export default SplashScreen;
