@@ -10,7 +10,6 @@ import AddressesScreen from '@/screens/profile/AddressesScreen';
 import ConditionsScreen from '@/screens/profile/ConditionsScreen';
 import NotifPrefsScreen from '@/screens/profile/NotifPrefsScreen';
 import DeleteAccountScreen from '@/screens/profile/DeleteAccountScreen';
-import LoginScreen from '@/screens/auth/LoginScreen';
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
 
@@ -25,8 +24,6 @@ const ProfileStackNavigator: React.FC = () => (
     <Stack.Screen name={Routes.CONDITIONS} component={ConditionsScreen} />
     <Stack.Screen name={Routes.NOTIF_PREFS} component={NotifPrefsScreen} />
     <Stack.Screen name={Routes.DELETE_ACCOUNT} component={DeleteAccountScreen} />
-    {/* Signout redirect — reuses LoginScreen from Auth flow */}
-    <Stack.Screen name={Routes.LOGIN} component={LoginScreen} />
   </Stack.Navigator>
 );
 

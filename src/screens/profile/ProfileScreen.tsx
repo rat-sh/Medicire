@@ -1,10 +1,5 @@
 /**
- * ProfileScreen.tsx
- * Figma: "Profile" — avatar, name, phone, list of account menu items with chevrons,
- *        signout button at bottom
- * Mock: Hardcoded user data
- * Real API: GET /users/profile
- * MOCK_MARKER: Replace MOCK_USER with useQuery(() => usersApi.getProfile())
+ * ProfileScreen.tsx — Figma: "Profile"
  */
 import React from 'react';
 import {
@@ -14,102 +9,125 @@ import { useNavigation } from '@react-navigation/native';
 import {
   User, MapPin, Heart, Bell, Settings, Shield, Trash2, ChevronRight, LogOut,
 } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ProfileStackParamList } from '@/navigation/types';
 import { Routes } from '@/constants/routes';
 import { Colors, FontSize, FontWeight, Spacing, Radius } from '@/constants/theme';
 import { Config } from '@/constants/config';
+import { useAuthStore } from '@/store/authStore';
+import { capitalize } from '@/utils/formatters';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList>;
 
-// ── MOCK_MARKER ───────────────────────────────────────────────────────────────
-const MOCK_USER = {
-  name: 'Arjun Sharma',
-  phone: '+91 98765 43210',
-  email: 'arjun.sharma@example.com',
-  age: 32,
-  gender: 'Male',
-};
-// ─────────────────────────────────────────────────────────────────────────────
-
-const MENU_ITEMS: {
-  icon: React.ComponentType<any>;
-  label: string;
-  sub?: string;
-  route?: string;
-  destructive?: boolean;
-}[] = [
-  { icon: MapPin, label: 'Saved Addresses', sub: '2 addresses', route: Routes.ADDRESSES },
-  { icon: Heart, label: 'Chronic Conditions', sub: 'Diabetes, Hypertension', route: Routes.CONDITIONS },
-  { icon: Bell, label: 'Notification Preferences', route: Routes.NOTIF_PREFS },
-  { icon: Settings, label: 'Settings', route: Routes.SETTINGS },
-  { icon: Shield, label: 'Privacy & Security', route: Routes.SETTINGS },
-  { icon: Trash2, label: 'Delete Account', route: Routes.DELETE_ACCOUNT, destructive: true },
-];
-
 const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
+  const insets = useSafeAreaInsets();
+  const user = useAuthStore(s => s.user);
+  const logout = useAuthStore(s => s.logout);
 
   const handleSignout = () => {
-    if (Config.USE_MOCK) {
-      // ── MOCK_MARKER: Clear auth store when backend is ready ───────────────
-      navigation.navigate(Routes.LOGIN as any);
-    }
+    logout();
   };
+
+  const formatPhone = (phone?: string) => {
+    if (!phone) return '—';
+    if (phone.startsWith('+')) return phone;
+    if (phone.length === 10) {
+      return `+91 ${phone.slice(0, 5)} ${phone.slice(5)}`;
+    }
+    return phone;
+  };
+
+  const conditionsSummary =
+    user?.conditions?.length
+      ? user.conditions.join(', ')
+      : undefined;
+
+  const addressCount = user?.savedAddresses?.length ?? 0;
+  const addressSub =
+    addressCount === 0
+      ? undefined
+      : `${addressCount} address${addressCount === 1 ? '' : 'es'}`;
+
+  const menuItems: {
+    icon: React.ComponentType<any>;
+    label: string;
+    sub?: string;
+    route?: keyof ProfileStackParamList;
+    destructive?: boolean;
+  }[] = [
+    { icon: MapPin, label: 'Saved Addresses', sub: addressSub, route: Routes.ADDRESSES },
+    { icon: Heart, label: 'Chronic Conditions', sub: conditionsSummary, route: Routes.CONDITIONS },
+    { icon: Bell, label: 'Notification Preferences', route: Routes.NOTIF_PREFS },
+    { icon: Settings, label: 'Settings', route: Routes.SETTINGS },
+    { icon: Shield, label: 'Privacy & Security', route: Routes.SETTINGS },
+    { icon: Trash2, label: 'Delete Account', route: Routes.DELETE_ACCOUNT, destructive: true },
+  ];
 
   return (
     <View style={styles.root}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.surface} />
-      <View style={styles.statusSpacer} />
 
-      {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
         <Text style={styles.heading}>My Profile</Text>
       </View>
 
-      <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent} showsVerticalScrollIndicator={false}>
-        {/* Avatar + info */}
+      <ScrollView
+        style={styles.body}
+        contentContainerStyle={styles.bodyContent}
+        showsVerticalScrollIndicator={false}>
         <View style={styles.avatarSection}>
           <View style={styles.avatar}>
             <User size={28} color={Colors.primary} />
           </View>
-          <Text style={styles.name}>{MOCK_USER.name}</Text>
-          <Text style={styles.phone}>{MOCK_USER.phone}</Text>
-          <View style={styles.pillRow}>
-            <View style={styles.pill}><Text style={styles.pillText}>{MOCK_USER.age} yrs</Text></View>
-            <View style={styles.pill}><Text style={styles.pillText}>{MOCK_USER.gender}</Text></View>
-          </View>
+          <Text style={styles.name}>{user?.name ?? 'Guest'}</Text>
+          <Text style={styles.phone}>{formatPhone(user?.phone)}</Text>
+          {(user?.age || user?.gender) && (
+            <View style={styles.pillRow}>
+              {user.age != null && (
+                <View style={styles.pill}>
+                  <Text style={styles.pillText}>{user.age} yrs</Text>
+                </View>
+              )}
+              {user.gender && (
+                <View style={styles.pill}>
+                  <Text style={styles.pillText}>{capitalize(user.gender)}</Text>
+                </View>
+              )}
+            </View>
+          )}
           <TouchableOpacity style={styles.editProfileBtn}>
             <Text style={styles.editProfileText}>Edit Profile</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Menu items */}
         <View style={styles.menu}>
-          {MENU_ITEMS.map(({ icon: Icon, label, sub, route, destructive }) => (
+          {menuItems.map(({ icon: Icon, label, sub, route, destructive }) => (
             <TouchableOpacity
               key={label}
               style={styles.menuItem}
-              onPress={() => route && navigation.navigate(route as any)}>
+              onPress={() => route && navigation.navigate(route)}>
               <View style={[styles.menuIcon, destructive && styles.menuIconDestructive]}>
                 <Icon size={16} color={destructive ? Colors.error : Colors.textSecondary} />
               </View>
               <View style={styles.menuText}>
-                <Text style={[styles.menuLabel, destructive && { color: Colors.error }]}>{label}</Text>
-                {sub && <Text style={styles.menuSub}>{sub}</Text>}
+                <Text style={[styles.menuLabel, destructive && { color: Colors.error }]}>
+                  {label}
+                </Text>
+                {sub ? <Text style={styles.menuSub} numberOfLines={1}>{sub}</Text> : null}
               </View>
               <ChevronRight size={14} color={Colors.textMuted} />
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* Signout */}
         <TouchableOpacity style={styles.signoutBtn} onPress={handleSignout}>
           <LogOut size={16} color={Colors.error} />
           <Text style={styles.signoutText}>Sign Out</Text>
         </TouchableOpacity>
 
-        <Text style={styles.version}>Medicire v1.0.0</Text>
+        <Text style={styles.version}>Medicire v{Config.APP_VERSION}</Text>
       </ScrollView>
     </View>
   );
@@ -117,18 +135,23 @@ const ProfileScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.background },
-  statusSpacer: { height: 44 },
   header: {
-    backgroundColor: Colors.surface, paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg,
-    borderBottomWidth: 1, borderBottomColor: Colors.borderLight,
+    backgroundColor: Colors.surface,
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
   },
   heading: { fontSize: FontSize.xl, fontWeight: FontWeight.bold, color: Colors.textPrimary },
   body: { flex: 1 },
   bodyContent: { paddingBottom: 100 },
   avatarSection: {
-    alignItems: 'center', backgroundColor: Colors.surface,
-    padding: Spacing.xl, marginBottom: Spacing.sm,
-    borderBottomWidth: 1, borderBottomColor: Colors.borderLight,
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    padding: Spacing.xl,
+    marginBottom: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
   },
   avatar: {
     width: 64, height: 64, borderRadius: 32, backgroundColor: Colors.primaryLight,
@@ -153,7 +176,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl, paddingVertical: Spacing.lg,
     borderBottomWidth: 1, borderBottomColor: Colors.borderLight,
   },
-  menuIcon: { width: 32, height: 32, backgroundColor: Colors.gray50, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center' },
+  menuIcon: {
+    width: 32, height: 32, backgroundColor: Colors.gray50, borderRadius: Radius.md,
+    alignItems: 'center', justifyContent: 'center',
+  },
   menuIconDestructive: { backgroundColor: Colors.errorLight },
   menuText: { flex: 1 },
   menuLabel: { fontSize: FontSize.sm, fontWeight: FontWeight.medium, color: Colors.textPrimary },

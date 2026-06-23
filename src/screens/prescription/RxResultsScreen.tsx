@@ -13,11 +13,11 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft, MapPin, Package, AlertTriangle } from 'lucide-react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RxStackParamList } from '@/navigation/types';
+import type { VaultStackParamList } from '@/navigation/types';
 import { Routes } from '@/constants/routes';
 import { Colors, FontSize, FontWeight, Spacing, Radius } from '@/constants/theme';
 
-type Nav = NativeStackNavigationProp<RxStackParamList>;
+type Nav = NativeStackNavigationProp<VaultStackParamList>;
 
 // ── MOCK_MARKER: Replace with real prescription results ───────────────────────
 const MOCK_MED_AVAILABILITY = [

@@ -217,3 +217,155 @@ Wire up App.tsx → providers → navigators
 Build UI primitives (Button, Input, Badge, Card, etc.) from Figma
 Then build screens one by one, starting from Auth flow
 
+The whole app desighn based on 'figma_Complete_App_Screen_Designs'. Follow this design strictly. 
+As its build in react and ts, you need to convert react to react native code and build it properly 
+
+
+USER (PATIENT) SIDE — Detailed Feature Specification
+
+1. Onboarding & Authentication
+Screens: Splash → Login/Signup → Location Permission → Home
+
+Signup via phone number (OTP) or email — phone is preferred for India, lower friction than email
+Minimal fields at signup: name, phone, password/OTP. Nothing else upfront — reduce drop-off
+Location permission requested immediately after signup with a clear one-line reason: "We need your location to find pharmacies near you"
+Optional profile completion (can skip): age, gender, saved addresses (home/work), chronic condition tags
+Returning user: auto-login via stored token, biometric/PIN unlock optional
+
+Why minimal upfront: Every extra field at signup is a drop-off point. Get them searching for medicine in under 60 seconds.
+
+2. Home Screen
+Layout (top to bottom):
+
+Search bar (sticky at top, always accessible)
+Current location indicator with "change location" tap target
+Quick-access chips: "Nearby pharmacies", "My reservations", "Upload prescription"
+Recently searched medicines (horizontal scroll)
+Map preview (collapsed) — tap to expand to full map view
+
+This screen should answer "what do I do here" in under 2 seconds of looking at it.
+
+3. Medicine Search
+Search bar behavior:
+
+Auto-suggestions trigger after 2 characters typed
+Suggestions show both brand name and generic/salt name (e.g. typing "crocin" also surfaces "paracetamol")
+Recent searches appear when search bar is tapped but empty
+
+Search results page:
+
+List view by default, map view toggle in top right
+Each result card shows:
+
+Pharmacy name + distance (e.g. "0.8 km away")
+Stock status badge — green "In stock", amber "Low stock", red "Out of stock"
+Price (if available)
+Open/closed live status with closing time if closing soon
+"Reserve" button directly on the card — no need to open pharmacy detail page for quick action
+
+
+
+Filters (collapsible bar):
+
+Distance (1km, 3km, 5km, 10km)
+Open now only
+Sort by: distance, price, stock availability
+
+
+4. Map View
+
+Full-screen map centered on user location
+Pharmacy pins color-coded: green (has medicine in stock), amber (low stock), gray (closed), red outline (out of stock but registered)
+Tapping a pin opens a bottom sheet (not a new page) with:
+
+Pharmacy name, rating (if implemented), distance
+Stock status of searched medicine
+"Get Directions" (opens native maps app) and "Reserve" buttons
+
+
+"Recenter" button to snap back to user's current location
+Cluster pins when zoomed out and many pharmacies overlap
+
+
+5. Pharmacy Detail Page
+Reached by tapping a pharmacy from search results or map.
+
+Pharmacy name, address, phone number (tap to call)
+Live open/closed status, full operating hours
+Full available medicine list at this pharmacy (searchable within the page)
+Reviews/ratings section (optional, future scope)
+"Reserve medicine" call-to-action
+
+
+6. Prescription Upload & Intelligence
+Upload flow:
+
+Camera capture or gallery upload, image cropping/rotation before submit
+Upload progress indicator (uploads to Cloudinary)
+
+AI processing flow (shown to user as a progress state, not a black box):
+
+Step 1: "Reading your prescription..." (OCR)
+Step 2: "Identifying medicines..." (NLP extraction)
+Step 3: "Checking nearby availability..."
+
+Results screen:
+
+List of extracted medicines (editable — user can correct OCR mistakes by tapping any item)
+For each medicine: availability status across nearby pharmacies
+Top recommendation card: "Apollo Pharmacy, Salt Lake — has 5 of 6 medicines, 1.2 km away" — ranked by completeness of match, then distance
+"Reserve all at this pharmacy" one-tap action
+Option to view alternate pharmacies if user wants to compare
+
+This is the single most important screen on the user side — it's the core differentiator. It needs to feel instant and trustworthy, not experimental.
+
+7. Cloud Prescription Vault
+
+Dedicated tab/section: "My Prescriptions"
+Chronological list of all uploaded prescriptions with date, doctor name (if extracted), thumbnail
+Tap any prescription to view full image + extracted medicine list + past order history tied to it
+Re-order directly from an old prescription (huge convenience for chronic/repeat patients)
+Search within vault (by medicine name or date)
+Privacy note clearly visible: data is encrypted/private to the user
+
+
+8. Reservation Flow
+Creating a reservation:
+
+From search result, map pin, or prescription results — same "Reserve" action everywhere
+Confirm screen: medicine name, quantity (default 1, editable), pharmacy, estimated pickup window
+Submit → reservation enters "Pending" state, pharmacy notified in real time via Socket.io
+
+Reservation states (visible to user):
+
+Pending (yellow) — waiting for pharmacy confirmation
+Confirmed (green) — pharmacy has held the stock, with pickup deadline shown
+Ready for pickup (blue)
+Cancelled (red) — with reason if pharmacy provided one
+Completed (gray) — after pickup
+
+Reservation Tracker page:
+
+All active and past reservations in one list, filterable by status
+Tapping a reservation shows full detail + live status updates without refresh
+Push notification fires on every status change
+
+
+9. Notifications
+
+Reservation status changes (confirmed/cancelled/ready)
+Stock alert: "Paracetamol is now back in stock at a pharmacy near you" (if user previously searched and it was unavailable)
+(Future scope) Refill reminders for chronic medicine based on purchase history
+
+
+10. Profile & Settings
+
+Edit profile, saved addresses
+Manage chronic condition tags (used for reminders)
+Notification preferences (toggle types on/off)
+Logout, delete account
+
+
+Tech mapping for this side (matching your stack)
+FeatureKey techAuto-suggest searchReact Query + debounced API callsMap viewGoogle Maps API + Geolocation APIReal-time stock/reservation updatesSocket.ioPrescription uploadCloudinary + OCR/NLP backend serviceReservation trackerTanStack Table or simple card list + React Query polling/socketUI componentsShadcn UI + Tailwind
+This gives you a clean, screen-by-screen build order: Onboarding → Home → Search → Map → Prescription Upload → Reservation Flow → Vault → Notifications/Profile. Build in that sequence since each one unlocks testing the next.

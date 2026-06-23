@@ -12,21 +12,14 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ChevronLeft, Camera, FileText, Info, ArrowRight } from 'lucide-react-native';
+import { ChevronLeft, Camera, FileText, Info } from 'lucide-react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RxStackParamList } from '@/navigation/types';
+import type { VaultStackParamList } from '@/navigation/types';
 import { Routes } from '@/constants/routes';
 import { Colors, FontSize, FontWeight, Spacing, Radius } from '@/constants/theme';
 
-type Nav = NativeStackNavigationProp<RxStackParamList>;
+type Nav = NativeStackNavigationProp<VaultStackParamList>;
 
-// ── MOCK_MARKER: Replace with real user prescriptions from API ─────────────────
-const MOCK_RECENT_RX = [
-  { date: '14 Jun', doc: 'Dr. S. Bose' },
-  { date: '2 May', doc: 'Dr. R. Kumar' },
-  { date: '18 Apr', doc: 'Dr. A. Das' },
-];
-// ─────────────────────────────────────────────────────────────────────────────
 
 const RxUploadScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
@@ -85,30 +78,13 @@ const RxUploadScreen: React.FC = () => {
           </Text>
         </View>
 
-        {/* Recent prescriptions */}
-        <Text style={styles.sectionTitle}>My Prescriptions (4)</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rxScroll}>
-          {/* MOCK_MARKER: Replace with real prescription thumbnails from API */}
-          {MOCK_RECENT_RX.map(({ date, doc }) => (
-            <TouchableOpacity
-              key={date}
-              style={styles.rxThumb}
-              onPress={() => navigation.navigate(Routes.RX_RESULTS, { prescriptionId: 'rx_001' })}>
-              <View style={styles.rxThumbImg}>
-                <FileText size={32} color={Colors.textMuted} />
-              </View>
-              <View style={styles.rxThumbInfo}>
-                <Text style={styles.rxThumbDate}>{date}</Text>
-                <Text style={styles.rxThumbDoc}>{doc}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-          {/* View all button */}
-          <TouchableOpacity style={styles.rxViewAll}>
-            <ArrowRight size={20} color={Colors.textMuted} />
-            <Text style={styles.rxViewAllText}>View all</Text>
+        <Text style={styles.sectionTitle}>My Prescriptions</Text>
+        <View style={styles.emptyRecent}>
+          <Text style={styles.emptyRecentText}>Upload a prescription to see it here.</Text>
+          <TouchableOpacity onPress={() => navigation.navigate(Routes.VAULT)}>
+            <Text style={styles.viewAllLink}>Go to Vault →</Text>
           </TouchableOpacity>
-        </ScrollView>
+        </View>
       </ScrollView>
     </View>
   );
@@ -174,6 +150,9 @@ const styles = StyleSheet.create({
     borderRadius: Radius.xl, alignItems: 'center', justifyContent: 'center', gap: 4,
   },
   rxViewAllText: { fontSize: 9, color: Colors.textMuted, fontWeight: FontWeight.medium },
+  emptyRecent: { paddingVertical: Spacing.lg, alignItems: 'center', gap: Spacing.sm },
+  emptyRecentText: { fontSize: FontSize.xs, color: Colors.textMuted },
+  viewAllLink: { fontSize: FontSize.xs, color: Colors.primary, fontWeight: FontWeight.semibold },
 });
 
 export default RxUploadScreen;

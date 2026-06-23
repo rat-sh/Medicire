@@ -13,13 +13,13 @@ import { Zap, Check, Shield } from 'lucide-react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming } from 'react-native-reanimated';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
-import type { RxStackParamList } from '@/navigation/types';
+import type { VaultStackParamList } from '@/navigation/types';
 import { Routes } from '@/constants/routes';
 import { Colors, FontSize, FontWeight, Spacing, Radius } from '@/constants/theme';
 import { Config } from '@/constants/config';
 
-type Nav = NativeStackNavigationProp<RxStackParamList>;
-type RouteProps = RouteProp<RxStackParamList, typeof Routes.RX_OCR>;
+type Nav = NativeStackNavigationProp<VaultStackParamList>;
+type RouteProps = RouteProp<VaultStackParamList, typeof Routes.RX_OCR>;
 
 const STAGES = [
   'Reading Prescription',

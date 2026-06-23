@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { Config } from '@/constants/config';
-import { storage } from '@/services/storage/mmkv';
+import { storage, StorageKeys } from '@/services/storage/mmkv';
 
 const apiClient = axios.create({
   baseURL: Config.API_BASE_URL,
@@ -14,7 +14,7 @@ const apiClient = axios.create({
 // ─── Request Interceptor — Attach Auth Token ──────────────────────────────────
 apiClient.interceptors.request.use(
   config => {
-    const token = storage.getString('accessToken');
+    const token = storage.getString(StorageKeys.ACCESS_TOKEN);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -29,8 +29,8 @@ apiClient.interceptors.response.use(
   async error => {
     if (error.response?.status === 401) {
       // Clear tokens and let the app handle re-auth via Zustand auth store
-      storage.remove('accessToken');
-      storage.remove('refreshToken');
+      storage.remove(StorageKeys.ACCESS_TOKEN);
+      storage.remove(StorageKeys.REFRESH_TOKEN);
     }
     return Promise.reject(error);
   },

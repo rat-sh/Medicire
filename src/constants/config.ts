@@ -4,8 +4,8 @@
 
 export const Config = {
   // ─── Mock Data Toggle ───────────────────────────────────────────────────────
-  // true  → app uses local mock data (no backend required)
-  // false → app hits real API endpoints
+  // true  → auth flow completes locally when backend is unavailable (dev only)
+  // false → all data comes from API; screens show empty/error states when offline
   USE_MOCK: true,
 
   // ─── API ────────────────────────────────────────────────────────────────────

@@ -1,4 +1,5 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { NavigatorScreenParams } from '@react-navigation/native';
 import { Routes } from '@/constants/routes';
 
 // ─── Auth Stack ───────────────────────────────────────────────────────────────
@@ -6,7 +7,7 @@ export type AuthStackParamList = {
   [Routes.SPLASH]: undefined;
   [Routes.LOGIN]: undefined;
   [Routes.SIGNUP]: undefined;
-  [Routes.OTP]: { phone: string };
+  [Routes.OTP]: { phone: string; name?: string; mode?: 'login' | 'signup' };
   [Routes.LOCATION_PERM]: undefined;
   [Routes.PROFILE_SETUP]: undefined;
 };
@@ -43,10 +44,17 @@ export type RxStackParamList = {
   [Routes.RX_COMPARE]: { prescriptionId: string };
 };
 
-// ─── Vault Stack ──────────────────────────────────────────────────────────────
+// ─── Vault Stack (includes prescription upload flow) ────────────────────────
 export type VaultStackParamList = {
   [Routes.VAULT]: undefined;
   [Routes.VAULT_DETAIL]: { prescriptionId: string };
+  [Routes.RX_UPLOAD]: undefined;
+  [Routes.RX_CROP]: { imageUri: string };
+  [Routes.RX_PROGRESS]: { imageUri: string };
+  [Routes.RX_OCR]: { prescriptionId: string };
+  [Routes.RX_REVIEW]: { prescriptionId: string };
+  [Routes.RX_RESULTS]: { prescriptionId: string };
+  [Routes.RX_COMPARE]: { prescriptionId: string };
 };
 
 // ─── Reservation Stack ────────────────────────────────────────────────────────
@@ -68,16 +76,15 @@ export type ProfileStackParamList = {
   [Routes.CONDITIONS]: undefined;
   [Routes.NOTIF_PREFS]: undefined;
   [Routes.DELETE_ACCOUNT]: undefined;
-  [Routes.LOGIN]: undefined; // for signout redirect
 };
 
 // ─── Bottom Tab ───────────────────────────────────────────────────────────────
 export type MainTabParamList = {
   [Routes.HOME_TAB]: undefined;
-  [Routes.SEARCH_TAB]: undefined;
-  [Routes.VAULT_TAB]: undefined;
-  [Routes.RESERVATIONS_TAB]: undefined;
-  [Routes.PROFILE_TAB]: undefined;
+  [Routes.SEARCH_TAB]: NavigatorScreenParams<SearchStackParamList> | undefined;
+  [Routes.VAULT_TAB]: NavigatorScreenParams<VaultStackParamList> | undefined;
+  [Routes.RESERVATIONS_TAB]: NavigatorScreenParams<ReservationStackParamList> | undefined;
+  [Routes.PROFILE_TAB]: NavigatorScreenParams<ProfileStackParamList> | undefined;
 };
 
 // ─── Root Navigator ───────────────────────────────────────────────────────────

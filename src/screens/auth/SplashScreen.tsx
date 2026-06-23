@@ -1,8 +1,6 @@
 /**
  * SplashScreen.tsx
  * Figma: "Splash Screen" — gradient bg, logo, tagline, dots
- * Mock: N/A (no data needed)
- * Real API: N/A
  */
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
@@ -18,13 +16,19 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '@/navigation/types';
 import { Routes } from '@/constants/routes';
+import { useAuthStore } from '@/store/authStore';
 
 type Nav = NativeStackNavigationProp<AuthStackParamList, typeof Routes.SPLASH>;
 
-const SplashScreen: React.FC = () => {
-  const navigation = useNavigation<Nav>();
+interface SplashScreenProps {
+  /** When false, only shows branding (used during auth hydration). */
+  autoNavigate?: boolean;
+}
 
-  // Animations
+const SplashScreen: React.FC<SplashScreenProps> = ({ autoNavigate = true }) => {
+  const navigation = useNavigation<Nav>();
+  const isAuthenticated = useAuthStore(s => s.isAuthenticated);
+
   const logoScale = useSharedValue(0.6);
   const logoOpacity = useSharedValue(0);
   const textOpacity = useSharedValue(0);
@@ -42,18 +46,26 @@ const SplashScreen: React.FC = () => {
     logoOpacity.value = withSpring(1);
     textOpacity.value = withDelay(400, withSpring(1));
     dotOpacity.value = withDelay(700, withSpring(1));
+  }, [logoScale, logoOpacity, textOpacity, dotOpacity]);
 
-    const t = setTimeout(() => navigation.replace(Routes.LOGIN), 2500);
+  useEffect(() => {
+    if (!autoNavigate) return;
+
+    const t = setTimeout(() => {
+      if (isAuthenticated) {
+        return;
+      }
+      navigation.replace(Routes.LOGIN);
+    }, 2500);
+
     return () => clearTimeout(t);
-  }, [navigation, logoScale, logoOpacity, textOpacity, dotOpacity]);
+  }, [autoNavigate, isAuthenticated, navigation]);
 
   return (
     <LinearGradient
       colors={['#0b8f81', '#0d9e8f', '#065f56']}
-      style={styles.container}
-    >
+      style={styles.container}>
       <View style={styles.center}>
-        {/* Logo Icon */}
         <Animated.View style={[styles.logoBox, logoStyle]}>
           <View style={styles.logoInner}>
             <View style={[styles.bar, styles.barTall]} />
@@ -62,14 +74,12 @@ const SplashScreen: React.FC = () => {
           </View>
         </Animated.View>
 
-        {/* App name & tagline */}
         <Animated.View style={[styles.textBlock, textStyle]}>
           <Text style={styles.appName}>Medicire</Text>
           <Text style={styles.tagline}>Medicine. Found. Fast.</Text>
         </Animated.View>
       </View>
 
-      {/* Bottom dots */}
       <Animated.View style={[styles.dotsRow, dotStyle]}>
         <View style={styles.dotSmall} />
         <View style={styles.dotLarge} />

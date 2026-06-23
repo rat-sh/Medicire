@@ -11,11 +11,13 @@ import type { ProfileStackParamList } from '@/navigation/types';
 import { Routes } from '@/constants/routes';
 import { Colors, FontSize, FontWeight, Spacing, Radius } from '@/constants/theme';
 import { Config } from '@/constants/config';
+import { useAuthStore } from '@/store/authStore';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList>;
 
 const DeleteAccountScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
+  const logout = useAuthStore(s => s.logout);
   const [agreed, setAgreed] = useState(false);
   const [confirm, setConfirm] = useState('');
 
@@ -27,7 +29,7 @@ const DeleteAccountScreen: React.FC = () => {
       Config.USE_MOCK
         ? 'MOCK: Account deletion simulated. Redirecting to login.'
         : 'Your account has been deleted.',
-      [{ text: 'OK', onPress: () => navigation.navigate(Routes.LOGIN as any) }],
+      [{ text: 'OK', onPress: () => logout() }],
     );
   };
 

@@ -5,6 +5,7 @@ import type { RootStackParamList } from './types';
 
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
+import SplashScreen from '@/screens/auth/SplashScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -16,7 +17,7 @@ const RootNavigator: React.FC = () => {
   }, [hydrate]);
 
   if (isLoading) {
-    return null; // Show splash/skeleton until hydration completes
+    return <SplashScreen autoNavigate={false} />;
   }
 
   return (

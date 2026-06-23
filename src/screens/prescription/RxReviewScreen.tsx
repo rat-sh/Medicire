@@ -13,11 +13,11 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft, Package, AlertCircle, Edit, Plus, CheckCircle } from 'lucide-react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RxStackParamList } from '@/navigation/types';
+import type { VaultStackParamList } from '@/navigation/types';
 import { Routes } from '@/constants/routes';
 import { Colors, FontSize, FontWeight, Spacing, Radius } from '@/constants/theme';
 
-type Nav = NativeStackNavigationProp<RxStackParamList>;
+type Nav = NativeStackNavigationProp<VaultStackParamList>;
 
 // ── MOCK_MARKER: Replace with real extracted medicines from prescription API ───
 const MOCK_EXTRACTED = [

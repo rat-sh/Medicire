@@ -12,12 +12,12 @@ import { useNavigation } from '@react-navigation/native';
 import Svg, { Circle } from 'react-native-svg';
 import { Shield } from 'lucide-react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RxStackParamList } from '@/navigation/types';
+import type { VaultStackParamList } from '@/navigation/types';
 import { Routes } from '@/constants/routes';
 import { Colors, FontSize, FontWeight, Spacing } from '@/constants/theme';
 import { Config } from '@/constants/config';
 
-type Nav = NativeStackNavigationProp<RxStackParamList>;
+type Nav = NativeStackNavigationProp<VaultStackParamList>;
 
 const RADIUS = 40;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;

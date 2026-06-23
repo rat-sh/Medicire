@@ -1,148 +1,151 @@
 /**
- * SearchScreen.tsx
- * Figma: "Search" — empty state with search bar, recent searches, popular tags
- * Mock: Recent + popular searches from MOCK data
- * Real API: GET /medicines/recent, GET /medicines/popular
- * MOCK_MARKER: Replace MOCK arrays with useRecentSearches() hook
+ * SearchScreen.tsx — Figma: "Search"
  */
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ScrollView, Pressable,
+  StyleSheet, ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Search, X, Clock, TrendingUp, ArrowRight } from 'lucide-react-native';
+import type { CompositeNavigationProp } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { SearchStackParamList } from '@/navigation/types';
+import { Search, ChevronLeft, RotateCcw, ArrowRight, Zap } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Routes } from '@/constants/routes';
+import type { MainTabParamList, SearchStackParamList } from '@/navigation/types';
 import { Colors, FontSize, FontWeight, Spacing, Radius } from '@/constants/theme';
-// ── MOCK_MARKER: Replace with useQuery(() => medicinesApi.getRecentSearches()) ──
-import { MOCK_RECENT_SEARCHES, MOCK_POPULAR_SEARCHES } from '@/services/api/mock/medicines';
-// ────────────────────────────────────────────────────────────────────────────────
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { useRecentSearches } from '@/hooks/useRecentSearches';
+import { usePopularSearches } from '@/hooks/usePopularSearches';
 
-type Nav = NativeStackNavigationProp<SearchStackParamList>;
+type Nav = CompositeNavigationProp<
+  NativeStackNavigationProp<SearchStackParamList, typeof Routes.SEARCH>,
+  BottomTabNavigationProp<MainTabParamList>
+>;
 
 const SearchScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
+  const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
+  const recentQuery = useRecentSearches();
+  const popularQuery = usePopularSearches();
 
-  const handleSearch = (term: string) => {
+  const goSuggestions = (term: string) => {
     if (!term.trim()) return;
-    navigation.navigate(Routes.SEARCH_SUGGESTIONS, { query: term });
+    navigation.navigate(Routes.SEARCH_SUGGESTIONS, { query: term.trim() });
   };
 
   const handleChange = (text: string) => {
     setQuery(text);
     if (text.length > 1) {
-      navigation.navigate(Routes.SEARCH_SUGGESTIONS, { query: text });
+      goSuggestions(text);
     }
   };
 
+  const recentSearches = recentQuery.data ?? [];
+  const popularSearches = popularQuery.data ?? [];
+
   return (
     <View style={styles.root}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.heading}>Find Medicines</Text>
-        <Text style={styles.sub}>Search by name, brand, or salt</Text>
-        {/* Search bar */}
+      <View style={[styles.topBar, { paddingTop: insets.top + Spacing.sm }]}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => navigation.navigate(Routes.HOME_TAB)}>
+          <ChevronLeft size={16} color={Colors.textPrimary} />
+        </TouchableOpacity>
         <View style={styles.searchRow}>
           <Search size={16} color={Colors.textMuted} />
           <TextInput
             style={styles.searchInput}
             value={query}
             onChangeText={handleChange}
-            placeholder="e.g. Paracetamol, Metformin..."
+            placeholder="Search medicines, brands..."
             placeholderTextColor={Colors.textMuted}
-            onSubmitEditing={() => handleSearch(query)}
             returnKeyType="search"
-            autoFocus={false}
+            onSubmitEditing={() => goSuggestions(query)}
+            autoFocus
           />
-          {query.length > 0 && (
-            <TouchableOpacity onPress={() => setQuery('')}>
-              <X size={16} color={Colors.textMuted} />
-            </TouchableOpacity>
-          )}
         </View>
       </View>
 
-      <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent} showsVerticalScrollIndicator={false}>
-
-        {/* Recent searches */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Clock size={14} color={Colors.textSecondary} />
-            <Text style={styles.sectionTitle}>Recent Searches</Text>
-          </View>
-          {/* MOCK_MARKER: Replace with real recent searches */}
-          {MOCK_RECENT_SEARCHES.map((term) => (
-            <TouchableOpacity
-              key={term}
-              style={styles.recentItem}
-              onPress={() => handleSearch(term)}>
-              <Text style={styles.recentText}>{term}</Text>
-              <ArrowRight size={14} color={Colors.textMuted} />
+      <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
+        <Text style={styles.sectionLabel}>Recent</Text>
+        {recentQuery.isLoading ? (
+          <LoadingSpinner text="Loading..." />
+        ) : recentSearches.length === 0 ? (
+          <Text style={styles.emptyText}>No recent searches yet.</Text>
+        ) : (
+          recentSearches.map(term => (
+            <TouchableOpacity key={term} style={styles.listItem} onPress={() => goSuggestions(term)}>
+              <View style={styles.listIconGray}>
+                <RotateCcw size={14} color={Colors.textMuted} />
+              </View>
+              <Text style={styles.listText}>{term}</Text>
+              <ArrowRight size={14} color={Colors.gray300} />
             </TouchableOpacity>
-          ))}
-        </View>
+          ))
+        )}
 
-        {/* Popular searches */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <TrendingUp size={14} color={Colors.textSecondary} />
-            <Text style={styles.sectionTitle}>Popular Near You</Text>
-          </View>
-          <View style={styles.popularWrap}>
-            {/* MOCK_MARKER: Replace with real popular searches */}
-            {MOCK_POPULAR_SEARCHES.map((term) => (
-              <Pressable
-                key={term}
-                style={styles.popularChip}
-                onPress={() => handleSearch(term)}>
-                <Text style={styles.popularChipText}>{term}</Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
+        <Text style={[styles.sectionLabel, styles.sectionGap]}>Popular</Text>
+        {popularQuery.isLoading ? (
+          <LoadingSpinner text="Loading..." />
+        ) : popularSearches.length === 0 ? (
+          <Text style={styles.emptyText}>Popular searches will appear here.</Text>
+        ) : (
+          popularSearches.map(term => (
+            <TouchableOpacity key={term} style={styles.listItem} onPress={() => goSuggestions(term)}>
+              <View style={styles.listIconTeal}>
+                <Zap size={14} color={Colors.primary} />
+              </View>
+              <Text style={styles.listText}>{term}</Text>
+              <ArrowRight size={14} color={Colors.gray300} />
+            </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.background },
-  header: {
-    backgroundColor: Colors.surface, paddingTop: 48,
-    paddingHorizontal: Spacing.xl, paddingBottom: Spacing.lg,
-    borderBottomWidth: 1, borderBottomColor: Colors.borderLight,
+  root: { flex: 1, backgroundColor: Colors.surface },
+  topBar: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.md,
+    paddingHorizontal: Spacing.lg, paddingBottom: Spacing.md,
   },
-  heading: { fontSize: FontSize.xl, fontWeight: FontWeight.bold, color: Colors.textPrimary },
-  sub: { fontSize: FontSize.sm, color: Colors.textSecondary, marginTop: 2, marginBottom: Spacing.lg },
+  backBtn: {
+    width: 32, height: 32, backgroundColor: Colors.gray100,
+    borderRadius: Radius.full, alignItems: 'center', justifyContent: 'center',
+  },
   searchRow: {
-    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
+    flex: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
     backgroundColor: Colors.gray100, borderRadius: Radius.xl,
-    paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg, paddingVertical: 10,
   },
-  searchInput: { flex: 1, fontSize: FontSize.base, color: Colors.textPrimary },
+  searchInput: { flex: 1, fontSize: FontSize.sm, color: Colors.textPrimary },
   body: { flex: 1 },
-  bodyContent: { padding: Spacing.xl, paddingBottom: 100 },
-  section: { marginBottom: Spacing.xl },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: Spacing.md },
-  sectionTitle: {
+  bodyContent: { paddingHorizontal: Spacing.xl, paddingBottom: 100 },
+  sectionLabel: {
     fontSize: FontSize.xs, fontWeight: FontWeight.semibold,
-    color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8,
+    color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.8,
+    marginBottom: Spacing.md,
   },
-  recentItem: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.borderLight,
+  sectionGap: { marginTop: Spacing.xl },
+  emptyText: { fontSize: FontSize.sm, color: Colors.textMuted, marginBottom: Spacing.md },
+  listItem: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.md,
+    paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.gray50,
   },
-  recentText: { fontSize: FontSize.base, color: Colors.textPrimary },
-  popularWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
-  popularChip: {
-    paddingHorizontal: Spacing.lg, paddingVertical: 8,
-    backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border,
-    borderRadius: Radius.full,
+  listIconGray: {
+    width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.gray100,
+    alignItems: 'center', justifyContent: 'center',
   },
-  popularChipText: { fontSize: FontSize.sm, fontWeight: FontWeight.medium, color: Colors.textSecondary },
+  listIconTeal: {
+    width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.primaryLight,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  listText: { flex: 1, fontSize: FontSize.sm, color: Colors.textPrimary },
 });
 
 export default SearchScreen;
