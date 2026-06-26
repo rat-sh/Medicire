@@ -9,7 +9,7 @@
 import React from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView,
-  StyleSheet,
+  StyleSheet, Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft, Camera, FileText, Info } from 'lucide-react-native';
@@ -17,12 +17,39 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { VaultStackParamList } from '@/navigation/types';
 import { Routes } from '@/constants/routes';
 import { Colors, FontSize, FontWeight, Spacing, Radius } from '@/constants/theme';
+import { pickImageFromCamera, pickImageFromGallery } from '@/utils/imagePicker';
 
 type Nav = NativeStackNavigationProp<VaultStackParamList>;
 
 
 const RxUploadScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
+
+  const openCrop = (imageUri: string) => {
+    navigation.navigate(Routes.RX_CROP, { imageUri });
+  };
+
+  const handleCamera = async () => {
+    try {
+      const uri = await pickImageFromCamera();
+      if (uri) {
+        openCrop(uri);
+      }
+    } catch {
+      Alert.alert('Error', 'Could not open the camera. Please try again.');
+    }
+  };
+
+  const handleGallery = async () => {
+    try {
+      const uri = await pickImageFromGallery();
+      if (uri) {
+        openCrop(uri);
+      }
+    } catch {
+      Alert.alert('Error', 'Could not open the gallery. Please try again.');
+    }
+  };
 
   return (
     <View style={styles.root}>
@@ -46,7 +73,7 @@ const RxUploadScreen: React.FC = () => {
           {/* Camera — primary */}
           <TouchableOpacity
             style={styles.optionPrimary}
-            onPress={() => navigation.navigate(Routes.RX_CROP, { imageUri: '' })}>
+            onPress={handleCamera}>
             <View style={styles.optionIconPrimary}>
               <Camera size={24} color={Colors.textInverse} />
             </View>
@@ -59,7 +86,7 @@ const RxUploadScreen: React.FC = () => {
           {/* Gallery — secondary */}
           <TouchableOpacity
             style={styles.optionSecondary}
-            onPress={() => navigation.navigate(Routes.RX_CROP, { imageUri: '' })}>
+            onPress={handleGallery}>
             <View style={styles.optionIconSecondary}>
               <FileText size={24} color={Colors.textSecondary} />
             </View>

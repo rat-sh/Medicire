@@ -7,14 +7,13 @@
  * MOCK_MARKER: Replace MOCK_PHARMACIES with pharmaciesApi.getNearby()
  */
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft, Search, Plus, Minus, Navigation } from 'lucide-react-native';
 import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { SearchStackParamList } from '@/navigation/types';
 import { Colors, FontSize, FontWeight, Spacing, Radius } from '@/constants/theme';
-import { Text } from 'react-native';
 // ── MOCK_MARKER ───────────────────────────────────────────────────────────────
 import { MOCK_PHARMACIES } from '@/services/api/mock/pharmacies';
 // ─────────────────────────────────────────────────────────────────────────────

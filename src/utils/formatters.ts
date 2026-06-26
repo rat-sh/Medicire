@@ -76,3 +76,18 @@ export const capitalize = (str: string): string =>
  */
 export const maskPhone = (phone: string): string =>
   phone.replace(/(\d{5})\d{4}(\d{1})/, '$1****$2');
+
+/**
+ * Format an ISO timestamp for order timeline display.
+ * Today    → "10:30 AM"
+ * Past day → "14 Jun, 10:30 AM"
+ */
+export const formatTimestamp = (iso: string | undefined): string => {
+  if (!iso) return '';
+  const d   = new Date(iso);
+  const now = new Date();
+  const isToday = d.toDateString() === now.toDateString();
+  return isToday
+    ? d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+    : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+};

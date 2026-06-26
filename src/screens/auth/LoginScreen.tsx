@@ -2,7 +2,7 @@
  * LoginScreen.tsx — Figma: "Login"
  */
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Eye, EyeOff, Phone } from 'lucide-react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -64,11 +64,7 @@ const LoginScreen: React.FC = () => {
   return (
     <ScreenLayout scroll keyboardAvoid contentStyle={styles.content}>
       <View style={styles.logoBox}>
-        <View style={styles.logoInner}>
-          <View style={[styles.bar, styles.barTall]} />
-          <View style={[styles.bar, styles.barMid]} />
-          <View style={[styles.bar, styles.barShort]} />
-        </View>
+        <Image source={require('../../../assets/img/logo2.png')} style={styles.logoImage} resizeMode="contain" />
       </View>
 
       <Text style={styles.heading}>Welcome back</Text>
@@ -89,6 +85,9 @@ const LoginScreen: React.FC = () => {
             placeholderTextColor={Colors.textMuted}
             keyboardType="phone-pad"
             maxLength={10}
+            autoComplete="off"
+            autoCorrect={false}
+            textContentType="telephoneNumber"
           />
         </View>
         {errors.phone ? <Text style={styles.errorText}>{errors.phone}</Text> : null}
@@ -104,6 +103,11 @@ const LoginScreen: React.FC = () => {
             placeholder="••••••••"
             placeholderTextColor={Colors.textMuted}
             secureTextEntry={!showPass}
+            autoComplete="off"
+            autoCorrect={false}
+            autoCapitalize="none"
+            spellCheck={false}
+            textContentType="password"
           />
           <TouchableOpacity style={styles.eyeBtn} onPress={() => setShowPass(p => !p)}>
             {showPass
@@ -155,15 +159,11 @@ const LoginScreen: React.FC = () => {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.xl, paddingBottom: Spacing.xxl },
   logoBox: {
-    width: 40, height: 40, backgroundColor: Colors.primaryLight,
-    borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center',
+    width: 80, height: 80,
+    alignItems: 'center', justifyContent: 'center',
     marginBottom: Spacing.lg,
   },
-  logoInner: { flexDirection: 'row', alignItems: 'flex-end', gap: 3 },
-  bar: { width: 6, backgroundColor: Colors.primary, borderRadius: 3 },
-  barTall: { height: 16 },
-  barMid: { height: 12, opacity: 0.5 },
-  barShort: { height: 14, opacity: 0.7 },
+  logoImage: { width: '100%', height: '100%' },
   heading: { fontSize: FontSize['3xl'], fontWeight: FontWeight.bold, color: Colors.textPrimary },
   subheading: { fontSize: FontSize.sm, color: Colors.textSecondary, marginTop: 4, marginBottom: Spacing.xxl },
   fieldGroup: { marginBottom: Spacing.lg },

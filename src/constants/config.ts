@@ -1,28 +1,31 @@
 // ─── App Configuration ────────────────────────────────────────────────────────
-// Toggle USE_MOCK to switch between real API and mock data.
-// When your backend is ready, set USE_MOCK to false and provide the API_BASE_URL.
+// Sensitive values are read from .env via react-native-config.
+// Use Config.USE_MOCK in dev; always false in production release.
+
+import RNConfig from 'react-native-config';
 
 export const Config = {
   // ─── Mock Data Toggle ───────────────────────────────────────────────────────
-  // true  → auth flow completes locally when backend is unavailable (dev only)
-  // false → all data comes from API; screens show empty/error states when offline
-  USE_MOCK: true,
+  // Reads USE_MOCK from .env; defaults to __DEV__ so production builds are never
+  // accidentally shipped in mock mode when the env var is absent.
+  USE_MOCK: RNConfig.USE_MOCK === 'true' || (RNConfig.USE_MOCK === undefined && __DEV__),
 
   // ─── API ────────────────────────────────────────────────────────────────────
-  API_BASE_URL: 'https://api.medicire.app/v1', // Replace when backend is ready
+  // .env: API_BASE_URL=https://api.medicire.app/v1
+  API_BASE_URL: RNConfig.API_BASE_URL ?? 'https://api.medicire.app/v1',
   API_TIMEOUT: 15000, // 15 seconds
 
   // ─── Socket.io ──────────────────────────────────────────────────────────────
-  SOCKET_URL: 'https://api.medicire.app', // Replace when backend is ready
+  // .env: SOCKET_URL=https://api.medicire.app
+  SOCKET_URL: RNConfig.SOCKET_URL ?? 'https://api.medicire.app',
 
   // ─── Cloudinary ─────────────────────────────────────────────────────────────
-  CLOUDINARY_CLOUD_NAME: 'medicire',       // Replace with your cloud name
-  CLOUDINARY_UPLOAD_PRESET: 'rx_uploads',  // Replace with your preset
+  // .env: CLOUDINARY_CLOUD_NAME=medicire  CLOUDINARY_UPLOAD_PRESET=rx_uploads
+  CLOUDINARY_CLOUD_NAME:    RNConfig.CLOUDINARY_CLOUD_NAME   ?? 'medicire',
+  CLOUDINARY_UPLOAD_PRESET: RNConfig.CLOUDINARY_UPLOAD_PRESET ?? 'rx_uploads',
 
   // ─── Maps ───────────────────────────────────────────────────────────────────
-  // Using OpenStreetMap via react-native-maps — completely FREE
-  // No API key required for OpenStreetMap tiles
-  MAP_PROVIDER: 'osm' as const, // 'osm' = OpenStreetMap (free) | 'google' = Google Maps
+  MAP_PROVIDER: 'osm' as const,
 
   // ─── App ────────────────────────────────────────────────────────────────────
   APP_NAME: 'Medicire',

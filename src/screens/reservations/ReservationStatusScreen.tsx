@@ -1,246 +1,277 @@
 /**
  * ReservationStatusScreen.tsx
- * Figma: "Reservation Status" — 4 states: pending / confirmed / ready / cancelled / completed
- *        Animated status icon with pharmacy card, timeline steps, action buttons
- * Mock: Shows state based on route.params.status, tab bar lets you cycle through all states
- * Real API: GET /reservations/:id with WebSocket for real-time updates
- * MOCK_MARKER: Replace mock status with real reservation WebSocket events
+ * Orchestrates the order status view.
+ * All rendering logic lives in dedicated components; this file owns only:
+ *   - Route params & mock data lookup
+ *   - Derived display values (status, flow, steps, totals)
+ *   - Navigation handlers
+ *   - Screen frame (header + scroll + inline CTAs)
  */
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
-  View, Text, TouchableOpacity, ScrollView, StyleSheet,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import {
-  ChevronLeft, Clock, CheckCircle, Package, XCircle, MapPin, Phone,
-} from 'lucide-react-native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RouteProp } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
+import { ChevronLeft, Package, Bell } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { ReservationStackParamList } from '@/navigation/types';
 import { Routes } from '@/constants/routes';
-import { Colors, FontSize, FontWeight, Spacing, Radius } from '@/constants/theme';
+import { Colors, FontSize, FontWeight, Spacing, Radius, Shadow } from '@/constants/theme';
+import { STATUS_CONFIG, PICKUP_FLOW, DELIVERY_FLOW } from '@/constants/reservation';
+import { MOCK_RESERVATIONS } from '@/services/api/mock/reservations';
+import type { ReservationStatus, TrackingStep } from '@/types/reservation';
+import {
+  OrderStatusHero,
+  OrderTimeline,
+  PharmacyContactCard,
+} from '@/components/reservation';
+import { guardReservationId, guardReservationStatus } from '@/utils/navParamGuards';
 
-type ReservationStatus = 'pending' | 'confirmed' | 'ready' | 'cancelled' | 'completed';
-type Nav = NativeStackNavigationProp<ReservationStackParamList>;
-type RouteProps = RouteProp<ReservationStackParamList, typeof Routes.RSV_STATUS>;
+type Props = NativeStackScreenProps<ReservationStackParamList, typeof Routes.RSV_STATUS>;
+type Nav   = NativeStackNavigationProp<ReservationStackParamList>;
 
-const STATUS_CONFIG: Record<ReservationStatus, {
-  icon: React.ComponentType<any>;
-  color: string;
-  bg: string;
-  title: string;
-  sub: string;
-  label: string;
-  badgeBg: string;
-  badgeBorder: string;
-}> = {
-  pending: {
-    icon: Clock, color: Colors.warning, bg: Colors.warningLight,
-    title: 'Awaiting pharmacy confirmation', label: 'Pending',
-    sub: 'The pharmacy will confirm your reservation within 10–15 minutes.',
-    badgeBg: Colors.warningLight, badgeBorder: Colors.warningBorder,
-  },
-  confirmed: {
-    icon: CheckCircle, color: Colors.success, bg: Colors.successLight,
-    title: 'Reservation confirmed!', label: 'Confirmed',
-    sub: 'Your medicines are set aside. Head to the pharmacy within 2 hours.',
-    badgeBg: Colors.successLight, badgeBorder: Colors.successBorder,
-  },
-  ready: {
-    icon: Package, color: Colors.info, bg: Colors.infoLight,
-    title: 'Medicines ready for pickup', label: 'Ready for Pickup',
-    sub: 'Your order is packed at the counter. Show this confirmation on arrival.',
-    badgeBg: Colors.infoLight, badgeBorder: Colors.infoBorder,
-  },
-  cancelled: {
-    icon: XCircle, color: Colors.error, bg: Colors.errorLight,
-    title: 'Reservation cancelled', label: 'Cancelled',
-    sub: 'This reservation was cancelled. You can search again and place a new one.',
-    badgeBg: Colors.errorLight, badgeBorder: Colors.errorBorder,
-  },
-  completed: {
-    icon: CheckCircle, color: Colors.gray500, bg: Colors.gray100,
-    title: 'Pickup completed!', label: 'Completed',
-    sub: 'Thanks for using Medicire. We hope you feel better soon.',
-    badgeBg: Colors.gray100, badgeBorder: Colors.gray200,
-  },
-};
-
-const STEPS: { key: ReservationStatus; label: string }[] = [
-  { key: 'pending', label: 'Requested' },
-  { key: 'confirmed', label: 'Confirmed' },
-  { key: 'ready', label: 'Ready' },
-  { key: 'completed', label: 'Collected' },
-];
-
-const stepIndex = (status: ReservationStatus) =>
-  ['pending', 'confirmed', 'ready', 'completed'].indexOf(status);
-
-const ReservationStatusScreen: React.FC = () => {
+// ─── Screen ───────────────────────────────────────────────────────────────────
+const ReservationStatusScreen: React.FC<Props> = ({ route }) => {
   const navigation = useNavigation<Nav>();
-  const route = useRoute<RouteProps>();
-  const status = (route.params?.status ?? 'pending') as ReservationStatus;
-  const cfg = STATUS_CONFIG[status];
-  const Icon = cfg.icon;
-  const currentStep = stepIndex(status);
+  const insets     = useSafeAreaInsets();
+  const { reservationId: rawId, status: rawStatus } = route.params;
+
+  // Guard: treat nav params as untrusted (deep links are user-controlled)
+  const reservationId = guardReservationId(rawId) ?? '';
+  const routeStatus   = guardReservationStatus(rawStatus);
+
+  const reservation = useMemo(
+    () => MOCK_RESERVATIONS.find(r => r.id === reservationId) ?? MOCK_RESERVATIONS[0],
+    [reservationId],
+  );
+
+  const status      = (routeStatus ?? reservation.status) as ReservationStatus;
+  const isCancelled = status === 'cancelled';
+  const isDelivery  = reservation.deliveryMode === 'delivery';
+  const flow        = isDelivery ? DELIVERY_FLOW : PICKUP_FLOW;
+  const cfg         = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
+
+  const steps: TrackingStep[] = reservation.trackingSteps ?? flow.map(key => ({
+    key,
+    label: STATUS_CONFIG[key]?.label ?? key,
+    timestamp: undefined,
+  }));
+
+  const subtotal = reservation.pricePerUnit * reservation.quantity;
+  const total    = subtotal + (reservation.deliveryFare ?? 0);
 
   return (
     <View style={styles.root}>
-      <View style={styles.statusSpacer} />
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+      {/* ── Header ── */}
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => navigation.navigate(Routes.RSV_TRACKER)}>
           <ChevronLeft size={16} color={Colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Reservation Status</Text>
-        <View style={styles.rightSpacer} />
+        <Text style={styles.title}>
+          Order #{reservation.id.split('_').pop()?.toUpperCase()}
+        </Text>
+        <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
-        {/* Status hero */}
-        <View style={[styles.heroCard, { backgroundColor: cfg.bg }]}>
-          <View style={[styles.heroIcon, { backgroundColor: cfg.bg }]}>
-            <Icon size={32} color={cfg.color} />
-          </View>
-          <Text style={[styles.heroTitle, { color: cfg.color }]}>{cfg.title}</Text>
-          <Text style={styles.heroSub}>{cfg.sub}</Text>
-          <View style={[styles.heroBadge, { backgroundColor: cfg.badgeBg, borderColor: cfg.badgeBorder }]}>
-            <Text style={[styles.heroBadgeText, { color: cfg.color }]}>{cfg.label}</Text>
-          </View>
-        </View>
+      <ScrollView
+        style={styles.body}
+        contentContainerStyle={[styles.bodyContent, { paddingBottom: insets.bottom + 100 }]}
+        showsVerticalScrollIndicator={false}>
 
-        {/* Timeline (only for active statuses) */}
-        {status !== 'cancelled' && (
-          <View style={styles.timelineCard}>
-            <View style={styles.timeline}>
-              {STEPS.map((step, i) => (
-                <React.Fragment key={step.key}>
-                  <View style={styles.timelineItem}>
-                    <View style={[
-                      styles.timelineDot,
-                      i <= currentStep ? styles.timelineDotActive : styles.timelineDotInactive,
-                    ]}>
-                      {i < currentStep && <CheckCircle size={12} color={Colors.textInverse} />}
-                      {i === currentStep && <View style={styles.timelineDotCenter} />}
-                    </View>
-                    <Text style={[
-                      styles.timelineLabel,
-                      i <= currentStep ? { color: Colors.textPrimary, fontWeight: FontWeight.semibold } : { color: Colors.textMuted },
-                    ]}>
-                      {step.label}
-                    </Text>
-                  </View>
-                  {i < STEPS.length - 1 && (
-                    <View style={[styles.timelineLine, i < currentStep && styles.timelineLineActive]} />
-                  )}
-                </React.Fragment>
-              ))}
-            </View>
+        {/* ── Status hero ── */}
+        <OrderStatusHero
+          status={status}
+          isDelivery={isDelivery}
+          cancellationReason={reservation.cancellationReason}
+        />
+
+        {/* ── Order progress timeline ── */}
+        {!isCancelled && (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Order Progress</Text>
+            <OrderTimeline
+              steps={steps}
+              status={status}
+              flow={flow}
+              activeColor={cfg.color}
+            />
           </View>
         )}
 
-        {/* Pharmacy info */}
-        <View style={styles.pharmacyCard}>
-          <Text style={styles.cardTitle}>Pickup Location</Text>
-          <View style={styles.pharmacyRow}>
-            <MapPin size={14} color={Colors.primary} />
-            <View>
-              <Text style={styles.pharmacyName}>Apollo Pharmacy, Salt Lake</Text>
-              <Text style={styles.pharmacyAddr}>Sector V, Bidhannagar, Kolkata</Text>
-            </View>
+        {/* ── Cancelled order history (simple list) ── */}
+        {isCancelled && (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Order History</Text>
+            {steps.map(step => (
+              <View key={step.key} style={styles.historyRow}>
+                <View style={[
+                  styles.historyDot,
+                  { backgroundColor: step.key === 'cancelled' ? Colors.error : Colors.success },
+                ]} />
+                <Text style={styles.historyLabel}>{step.label}</Text>
+                {step.timestamp && (
+                  <Text style={styles.historyTs}>
+                    {new Date(step.timestamp).toLocaleTimeString('en-IN', {
+                      hour: '2-digit', minute: '2-digit',
+                    })}
+                  </Text>
+                )}
+              </View>
+            ))}
           </View>
-          <TouchableOpacity style={styles.callBtn}>
-            <Phone size={14} color={Colors.textSecondary} />
-            <Text style={styles.callBtnText}>+91 98765 43210</Text>
-          </TouchableOpacity>
+        )}
+
+        {/* ── Order details ── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Order Details</Text>
+          <DetailRow label="Medicine"  value={reservation.medicineName} />
+          <DetailRow label="Dosage"    value={reservation.medicineDosage} />
+          <DetailRow label="Quantity"  value={`${reservation.quantity} strips`} />
+          <DetailRow label="Mode"      value={isDelivery ? 'Home Delivery' : 'Store Pickup'} />
+          {isDelivery && reservation.deliveryAddress && (
+            <DetailRow label="Deliver to" value={reservation.deliveryAddress} />
+          )}
+          <DetailRow label="Subtotal"  value={`₹${subtotal}`} />
+          {isDelivery && (
+            <DetailRow label="Delivery Fare" value={`₹${reservation.deliveryFare ?? 0}`} />
+          )}
+          <View style={styles.detailTotalRow}>
+            <Text style={styles.detailTotalLabel}>Total Paid</Text>
+            <Text style={styles.detailTotalValue}>₹{total}</Text>
+          </View>
         </View>
 
-        {/* Ref code */}
-        <View style={styles.refCard}>
-          <Text style={styles.refLabel}>Reservation ID</Text>
-          <Text style={styles.refCode}>#RSV-2025-1847</Text>
+        {/* ── Pharmacy contact card ── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Pharmacy</Text>
+          <PharmacyContactCard
+            name={reservation.pharmacyName}
+            address={reservation.pharmacyAddress}
+            phone={reservation.pharmacyPhone}
+            lat={reservation.pharmacyLat}
+            lng={reservation.pharmacyLng}
+            isDelivery={isDelivery}
+          />
         </View>
 
-        {/* Action buttons */}
+        {/* ── Pending notification hint ── */}
         {status === 'pending' && (
-          <TouchableOpacity style={styles.cancelBtn}>
-            <Text style={styles.cancelBtnText}>Cancel Reservation</Text>
-          </TouchableOpacity>
+          <View style={styles.infoBox}>
+            <Bell size={16} color={Colors.warning} />
+            <Text style={styles.infoText}>
+              You'll get a notification when the pharmacy confirms or rejects your order.
+            </Text>
+          </View>
         )}
-        {(status === 'confirmed' || status === 'ready') && (
+
+        {/* ── CTAs ── */}
+        {isCancelled && (
           <TouchableOpacity
-            style={styles.trackBtn}
-            onPress={() => navigation.navigate(Routes.RSV_TRACKER as any)}>
-            <Text style={styles.trackBtnText}>Track Reservation</Text>
+            style={styles.primaryBtn}
+            onPress={() => navigation.navigate(Routes.RSV_TRACKER)}>
+            <Text style={styles.primaryBtnText}>Find Another Pharmacy</Text>
           </TouchableOpacity>
         )}
+
+        <TouchableOpacity
+          style={styles.secondaryBtn}
+          onPress={() => navigation.navigate(Routes.RSV_TRACKER)}>
+          <Package size={14} color={Colors.textSecondary} style={styles.btnIcon} />
+          <Text style={styles.secondaryBtnText}>View All Orders</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
 };
 
+// ─── Local helper ─────────────────────────────────────────────────────────────
+const DetailRow: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+  <View style={styles.detailRow}>
+    <Text style={styles.detailLabel}>{label}</Text>
+    <Text style={styles.detailValue}>{value}</Text>
+  </View>
+);
+
+// ─── Styles ──────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.background },
-  statusSpacer: { height: 44 },
+
   header: {
-    flexDirection: 'row', alignItems: 'center', gap: Spacing.md,
-    backgroundColor: Colors.surface, paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md,
-    borderBottomWidth: 1, borderBottomColor: Colors.borderLight,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: Spacing.lg, paddingBottom: Spacing.md,
+    backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.borderLight,
   },
-  backBtn: { width: 32, height: 32, backgroundColor: Colors.gray100, borderRadius: Radius.full, alignItems: 'center', justifyContent: 'center' },
-  rightSpacer: { width: 32 },
-  headerTitle: { flex: 1, fontSize: FontSize.base, fontWeight: FontWeight.semibold, color: Colors.textPrimary, textAlign: 'center' },
+  backBtn: {
+    width: 32, height: 32, backgroundColor: Colors.gray100,
+    borderRadius: Radius.full, alignItems: 'center', justifyContent: 'center',
+  },
+  headerSpacer: { width: 32 },
+  title: { fontSize: FontSize.base, fontWeight: FontWeight.bold, color: Colors.textPrimary },
+
   body: { flex: 1 },
-  bodyContent: { padding: Spacing.lg, paddingBottom: 100, gap: Spacing.md },
-  heroCard: { borderRadius: Radius.xl, padding: Spacing.xl, alignItems: 'center', gap: Spacing.md },
-  heroIcon: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center' },
-  heroTitle: { fontSize: FontSize.base, fontWeight: FontWeight.bold, textAlign: 'center' },
-  heroSub: { fontSize: FontSize.sm, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 },
-  heroBadge: { paddingHorizontal: Spacing.lg, paddingVertical: 6, borderRadius: Radius.full, borderWidth: 1 },
-  heroBadgeText: { fontSize: FontSize.xs, fontWeight: FontWeight.bold },
-  timelineCard: {
+  bodyContent: { padding: Spacing.lg, gap: Spacing.md },
+
+  section: {
     backgroundColor: Colors.surface, borderRadius: Radius.xl,
-    borderWidth: 1, borderColor: Colors.borderLight, padding: Spacing.xl,
+    padding: Spacing.lg, borderWidth: 1, borderColor: Colors.borderLight, ...Shadow.sm,
   },
-  timeline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  timelineItem: { alignItems: 'center', gap: 6 },
-  timelineDot: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  timelineDotActive: { backgroundColor: Colors.primary },
-  timelineDotInactive: { backgroundColor: Colors.gray100, borderWidth: 2, borderColor: Colors.gray200 },
-  timelineDotCenter: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.textInverse },
-  timelineLabel: { fontSize: 10 },
-  timelineLine: { flex: 1, height: 2, backgroundColor: Colors.gray200, marginHorizontal: 2, marginBottom: 20 },
-  timelineLineActive: { backgroundColor: Colors.primary },
-  pharmacyCard: {
-    backgroundColor: Colors.surface, borderRadius: Radius.xl,
-    borderWidth: 1, borderColor: Colors.borderLight, padding: Spacing.lg, gap: Spacing.md,
+  sectionLabel: {
+    fontSize: 10, fontWeight: FontWeight.bold, color: Colors.textMuted,
+    textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 14,
   },
-  cardTitle: { fontSize: FontSize.xs, fontWeight: FontWeight.semibold, color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8 },
-  pharmacyRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.md },
-  pharmacyName: { fontSize: FontSize.sm, fontWeight: FontWeight.semibold, color: Colors.textPrimary },
-  pharmacyAddr: { fontSize: FontSize.xs, color: Colors.textSecondary, marginTop: 2 },
-  callBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: Colors.gray50, borderWidth: 1, borderColor: Colors.border,
-    borderRadius: Radius.md, paddingVertical: 8, paddingHorizontal: Spacing.md, alignSelf: 'flex-start',
+
+  // Cancelled history
+  historyRow: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: 6,
   },
-  callBtnText: { fontSize: FontSize.xs, fontWeight: FontWeight.medium, color: Colors.textSecondary },
-  refCard: {
-    backgroundColor: Colors.surface, borderRadius: Radius.xl,
-    borderWidth: 1, borderColor: Colors.borderLight, padding: Spacing.lg,
-    alignItems: 'center',
+  historyDot:  { width: 10, height: 10, borderRadius: 5 },
+  historyLabel:{ flex: 1, fontSize: FontSize.sm, color: Colors.textSecondary },
+  historyTs:   { fontSize: FontSize.xs, color: Colors.textMuted },
+
+  // Order detail rows
+  detailRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: Colors.gray50,
   },
-  refLabel: { fontSize: FontSize.xs, color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8 },
-  refCode: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.textPrimary, fontVariant: ['tabular-nums'], marginTop: 4 },
-  cancelBtn: {
-    borderWidth: 1, borderColor: Colors.error, borderRadius: Radius.md,
-    paddingVertical: 12, alignItems: 'center',
+  detailLabel: { fontSize: FontSize.xs, color: Colors.textMuted },
+  detailValue: {
+    fontSize: FontSize.sm, fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary, maxWidth: '60%', textAlign: 'right',
   },
-  cancelBtnText: { color: Colors.error, fontWeight: FontWeight.semibold, fontSize: FontSize.sm },
-  trackBtn: {
-    backgroundColor: Colors.primary, borderRadius: Radius.md, paddingVertical: 12, alignItems: 'center',
+  detailTotalRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingTop: 10, marginTop: 4,
   },
-  trackBtnText: { color: Colors.textInverse, fontWeight: FontWeight.semibold, fontSize: FontSize.sm },
+  detailTotalLabel: { fontSize: FontSize.base, fontWeight: FontWeight.bold, color: Colors.textPrimary },
+  detailTotalValue: { fontSize: FontSize.xl, fontWeight: FontWeight.bold, color: Colors.primary },
+
+  // Pending info box
+  infoBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: Colors.warningLight, padding: Spacing.md,
+    borderRadius: Radius.xl, borderWidth: 1, borderColor: Colors.warningBorder,
+  },
+  infoText: {
+    flex: 1, fontSize: FontSize.xs, color: Colors.warning,
+    fontWeight: FontWeight.medium, lineHeight: 18,
+  },
+
+  // Buttons
+  primaryBtn: {
+    backgroundColor: Colors.primary, paddingVertical: 14,
+    borderRadius: Radius.xl, alignItems: 'center',
+  },
+  primaryBtnText: { color: Colors.textInverse, fontSize: FontSize.base, fontWeight: FontWeight.bold },
+  secondaryBtn: {
+    flexDirection: 'row', borderWidth: 1, borderColor: Colors.borderLight,
+    paddingVertical: 14, borderRadius: Radius.xl,
+    alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.surface,
+  },
+  secondaryBtnText: { color: Colors.textSecondary, fontSize: FontSize.sm, fontWeight: FontWeight.semibold },
+  btnIcon: { marginRight: 6 },
 });
 
 export default ReservationStatusScreen;

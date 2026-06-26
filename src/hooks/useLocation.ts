@@ -53,7 +53,10 @@ export const useLocation = () => {
               resolve(true);
             },
             (error) => {
-              console.error('Location error:', error);
+              if (__DEV__) {
+                // eslint-disable-next-line no-console
+                console.error('[DEV] Location error:', error);
+              }
               Alert.alert('Error', 'Unable to fetch your current location. Please ensure GPS is enabled.');
               resolve(false);
             },
@@ -73,7 +76,10 @@ export const useLocation = () => {
         return false;
       }
     } catch (err) {
-      console.error('Request location error:', err);
+      if (__DEV__) {
+        // eslint-disable-next-line no-console
+        console.error('[DEV] Request location error:', err);
+      }
       setPermission(false);
       return false;
     } finally {

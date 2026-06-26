@@ -131,6 +131,11 @@ const OtpScreen: React.FC = () => {
             maxLength={1}
             textAlign="center"
             selectionColor={Colors.primary}
+            // Security: allow OS to auto-fill from SMS without clipboard exposure
+            textContentType="oneTimeCode"
+            autoComplete={i === 0 ? 'one-time-code' : 'off'}
+            autoCorrect={false}
+            spellCheck={false}
           />
         ))}
       </View>

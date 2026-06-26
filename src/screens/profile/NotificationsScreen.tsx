@@ -1,132 +1,90 @@
 /**
- * NotificationsScreen.tsx
- * Figma: "Notifications" — notification items grouped by Today/Earlier,
- *        unread dot, mark-all-read button
- * Mock: Hardcoded notification list
- * Real API: GET /notifications
- * MOCK_MARKER: Replace MOCK_NOTIFS with notificationsApi.list()
+ * NotificationsScreen.tsx — Figma: "Notifications"
+ * List of notifications with unread indicators and type-specific icons.
  */
-import React, { useState } from 'react';
-import {
-  View, Text, TouchableOpacity, FlatList, StyleSheet,
-} from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ChevronLeft, Bell, Package, AlertTriangle, CheckCircle, Info } from 'lucide-react-native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { ProfileStackParamList } from '@/navigation/types';
-import { Routes } from '@/constants/routes';
+import { ChevronLeft, Package, Bell, XCircle, CheckCircle } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, FontSize, FontWeight, Spacing, Radius } from '@/constants/theme';
 
-type Nav = NativeStackNavigationProp<ProfileStackParamList>;
-
-type NotifType = 'reservation' | 'medicine' | 'alert' | 'info';
-
-// ── MOCK_MARKER ───────────────────────────────────────────────────────────────
-const MOCK_NOTIFS = [
-  { id: 'n1', type: 'reservation' as NotifType, title: 'Reservation Confirmed!', body: 'Apollo Pharmacy confirmed your reservation for Paracetamol 500mg.', time: '5 min ago', unread: true, group: 'Today' },
-  { id: 'n2', type: 'medicine' as NotifType, title: 'Medicine Now Available', body: 'Metformin 500mg is now in stock at MedPlus, Sector V.', time: '1 hr ago', unread: true, group: 'Today' },
-  { id: 'n3', type: 'alert' as NotifType, title: 'Low Stock Alert', body: 'Atorvastatin 10mg is running low at your preferred pharmacy.', time: '3 hr ago', unread: false, group: 'Today' },
-  { id: 'n4', type: 'reservation' as NotifType, title: 'Pickup Reminder', body: 'Don\'t forget to collect your medicine before 9 PM.', time: 'Yesterday', unread: false, group: 'Earlier' },
-  { id: 'n5', type: 'info' as NotifType, title: 'Prescription Processed', body: 'Your prescription from Jun 2 has been successfully processed.', time: '2 days ago', unread: false, group: 'Earlier' },
+const NOTIFICATIONS = [
+  { id: '1', icon: Package, color: Colors.success, bg: Colors.successLight, title: "Reservation Confirmed", body: "Apollo Pharmacy confirmed your Metformin 500mg reservation.", time: "2 min ago", unread: true },
+  { id: '2', icon: Bell, color: Colors.primary, bg: Colors.primaryLight, title: "Medicine Back in Stock", body: "Paracetamol 650mg is now available at MedPlus, Sector V.", time: "1 hr ago", unread: true },
+  { id: '3', icon: XCircle, color: Colors.error, bg: Colors.errorLight, title: "Reservation Cancelled", body: "Frank Ross cancelled your Atorvastatin order. View alternatives.", time: "3 hrs ago", unread: false },
+  { id: '4', icon: Package, color: Colors.primary, bg: Colors.primaryLight, title: "Ready for Pickup", body: "Your Vitamin D3 60K is ready at Guardian Pharmacy.", time: "Yesterday", unread: false },
+  { id: '5', icon: CheckCircle, color: Colors.textMuted, bg: Colors.gray100, title: "Pickup Completed", body: "You picked up Amlodipine 5mg from Apollo Pharmacy.", time: "2 days ago", unread: false },
 ];
-// ─────────────────────────────────────────────────────────────────────────────
-
-const NOTIF_ICON: Record<NotifType, { icon: React.ComponentType<any>; bg: string; color: string }> = {
-  reservation: { icon: Package, bg: Colors.primaryLight, color: Colors.primary },
-  medicine: { icon: CheckCircle, bg: Colors.successLight, color: Colors.success },
-  alert: { icon: AlertTriangle, bg: Colors.warningLight, color: Colors.warning },
-  info: { icon: Info, bg: Colors.infoLight, color: Colors.info },
-};
 
 const NotificationsScreen: React.FC = () => {
-  const navigation = useNavigation<Nav>();
-  const [notifs, setNotifs] = useState(MOCK_NOTIFS);
-  const unreadCount = notifs.filter(n => n.unread).length;
-
-  const markAllRead = () => setNotifs(prev => prev.map(n => ({ ...n, unread: false })));
-
-  const groups = ['Today', 'Earlier'];
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.root}>
-      <View style={styles.statusSpacer} />
-      {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <ChevronLeft size={16} color={Colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Notifications</Text>
-        {unreadCount > 0 && (
-          <TouchableOpacity onPress={markAllRead}>
-            <Text style={styles.markAllText}>Mark all read</Text>
-          </TouchableOpacity>
-        )}
+        <Text style={styles.title}>Notifications</Text>
+        <TouchableOpacity>
+          <Text style={styles.markRead}>Mark all read</Text>
+        </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={groups}
-        keyExtractor={g => g}
-        contentContainerStyle={styles.list}
-        renderItem={({ item: group }) => {
-          const items = notifs.filter(n => n.group === group);
-          if (!items.length) return null;
+      <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
+        {NOTIFICATIONS.map(notif => {
+          const Icon = notif.icon;
           return (
-            <View>
-              <Text style={styles.groupLabel}>{group}</Text>
-              {items.map(n => {
-                const icfg = NOTIF_ICON[n.type];
-                const Icon = icfg.icon;
-                return (
-                  <TouchableOpacity key={n.id} style={[styles.notifCard, n.unread && styles.notifCardUnread]}>
-                    <View style={[styles.notifIcon, { backgroundColor: icfg.bg }]}>
-                      <Icon size={16} color={icfg.color} />
-                    </View>
-                    <View style={styles.notifBody}>
-                      <View style={styles.notifTitleRow}>
-                        <Text style={[styles.notifTitle, n.unread && styles.notifTitleUnread]}>{n.title}</Text>
-                        {n.unread && <View style={styles.unreadDot} />}
-                      </View>
-                      <Text style={styles.notifText}>{n.body}</Text>
-                      <Text style={styles.notifTime}>{n.time}</Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+            <TouchableOpacity
+              key={notif.id}
+              style={[styles.item, notif.unread && styles.itemUnread]}>
+              <View style={[styles.iconBox, { backgroundColor: notif.bg }]}>
+                <Icon size={18} color={notif.color} />
+              </View>
+              <View style={styles.content}>
+                <View style={styles.itemTop}>
+                  <Text style={styles.itemTitle}>{notif.title}</Text>
+                  {notif.unread && <View style={styles.unreadDot} />}
+                </View>
+                <Text style={styles.itemBody}>{notif.body}</Text>
+                <Text style={styles.itemTime}>{notif.time}</Text>
+              </View>
+            </TouchableOpacity>
           );
-        }}
-      />
+        })}
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.background },
-  statusSpacer: { height: 44 },
   header: {
-    flexDirection: 'row', alignItems: 'center', gap: Spacing.md,
-    backgroundColor: Colors.surface, paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md,
-    borderBottomWidth: 1, borderBottomColor: Colors.borderLight,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: Spacing.lg, paddingBottom: Spacing.md,
+    backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.borderLight,
   },
   backBtn: { width: 32, height: 32, backgroundColor: Colors.gray100, borderRadius: Radius.full, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { flex: 1, fontSize: FontSize.base, fontWeight: FontWeight.semibold, color: Colors.textPrimary, textAlign: 'center' },
-  markAllText: { fontSize: FontSize.xs, color: Colors.primary, fontWeight: FontWeight.semibold },
-  list: { padding: Spacing.lg, paddingBottom: 100 },
-  groupLabel: { fontSize: FontSize.xs, fontWeight: FontWeight.semibold, color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8, marginVertical: Spacing.md },
-  notifCard: {
-    flexDirection: 'row', gap: Spacing.md, backgroundColor: Colors.surface,
-    borderRadius: Radius.xl, padding: Spacing.lg, marginBottom: Spacing.md,
-    borderWidth: 1, borderColor: Colors.borderLight,
+  title: { fontSize: 18, fontWeight: FontWeight.bold, color: Colors.textPrimary },
+  markRead: { fontSize: 12, fontWeight: FontWeight.semibold, color: Colors.primary },
+  body: { flex: 1 },
+  item: {
+    flexDirection: 'row', gap: Spacing.md, padding: Spacing.lg,
+    backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.gray50,
   },
-  notifCardUnread: { backgroundColor: Colors.primaryLight, borderColor: 'rgba(11,143,129,0.2)' },
-  notifIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  notifBody: { flex: 1 },
-  notifTitleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: 4 },
-  notifTitle: { flex: 1, fontSize: FontSize.sm, fontWeight: FontWeight.medium, color: Colors.textPrimary },
-  notifTitleUnread: { fontWeight: FontWeight.bold },
-  unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.primary },
-  notifText: { fontSize: FontSize.xs, color: Colors.textSecondary, lineHeight: 18 },
-  notifTime: { fontSize: 10, color: Colors.textMuted, marginTop: 4 },
+  itemUnread: { backgroundColor: Colors.primaryLight + '10' },
+  iconBox: {
+    width: 40, height: 40, borderRadius: Radius.xl,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  content: { flex: 1 },
+  itemTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  itemTitle: { fontSize: 14, fontWeight: FontWeight.bold, color: Colors.textPrimary },
+  unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.primary, marginTop: 2 },
+  itemBody: { fontSize: 12, color: Colors.textSecondary, marginTop: 4, lineHeight: 18 },
+  itemTime: { fontSize: 10, color: Colors.textMuted, marginTop: 6, fontWeight: FontWeight.medium },
 });
 
 export default NotificationsScreen;

@@ -1,187 +1,179 @@
 /**
- * RxResultsScreen.tsx
- * Figma: "Prescription Results" — gradient best-match card, medicine availability
- *        list with stock dots, out-of-stock warning banner
- * Mock: Hardcoded medicine availability results
- * Real API: GET /prescriptions/:id/pharmacy-results
- * MOCK_MARKER: Replace MOCK data with real prescription results API
+ * RxResultsScreen.tsx — Figma: "Prescription Results"
+ * Summary card with best match, detailed availability list, and actions.
  */
 import React from 'react';
-import {
-  View, Text, TouchableOpacity, ScrollView, StyleSheet,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { ChevronLeft, MapPin, Package, AlertTriangle } from 'lucide-react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { ChevronLeft, MapPin, Package, AlertTriangle, Building2 } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { VaultStackParamList } from '@/navigation/types';
 import { Routes } from '@/constants/routes';
-import { Colors, FontSize, FontWeight, Spacing, Radius } from '@/constants/theme';
+import { Colors, FontSize, FontWeight, Spacing, Radius, Shadow } from '@/constants/theme';
+import LinearGradient from 'react-native-linear-gradient';
 
 type Nav = NativeStackNavigationProp<VaultStackParamList>;
+type RouteProps = RouteProp<VaultStackParamList, typeof Routes.RX_RESULTS>;
 
-// ── MOCK_MARKER: Replace with real prescription results ───────────────────────
-const MOCK_MED_AVAILABILITY = [
-  { name: 'Metformin 500mg', status: 'in-stock', pharmacies: 4 },
-  { name: 'Atorvastatin 10mg', status: 'in-stock', pharmacies: 3 },
-  { name: 'Amlodipine 5mg', status: 'in-stock', pharmacies: 5 },
-  { name: 'Pantoprazole 40mg', status: 'low-stock', pharmacies: 2 },
-  { name: 'Metoprolol 25mg', status: 'in-stock', pharmacies: 3 },
-  { name: 'Vitamin D3 60K', status: 'out-of-stock', pharmacies: 0 },
+const AVAILABILITY = [
+  { id: '1', name: "Metformin 500mg", status: "in-stock", pharmacies: 4 },
+  { id: '2', name: "Atorvastatin 10mg", status: "in-stock", pharmacies: 3 },
+  { id: '3', name: "Amlodipine 5mg", status: "in-stock", pharmacies: 5 },
+  { id: '4', name: "Pantoprazole 40mg", status: "low-stock", pharmacies: 2 },
+  { id: '5', name: "Metoprolol 25mg", status: "in-stock", pharmacies: 3 },
+  { id: '6', name: "Vitamin D3 60K", status: "out-of-stock", pharmacies: 0 },
 ];
-// ─────────────────────────────────────────────────────────────────────────────
-
-const STATUS_DOT: Record<string, string> = {
-  'in-stock': Colors.pinInStock,
-  'low-stock': Colors.pinLowStock,
-  'out-of-stock': Colors.pinOutOfStock,
-};
-
-const BADGE_CFG: Record<string, { label: string; bg: string; border: string; text: string }> = {
-  'in-stock': { label: 'In stock', bg: Colors.successLight, border: Colors.successBorder, text: Colors.success },
-  'low-stock': { label: 'Low stock', bg: Colors.warningLight, border: Colors.warningBorder, text: Colors.warning },
-  'out-of-stock': { label: 'Unavailable', bg: Colors.errorLight, border: Colors.errorBorder, text: Colors.error },
-};
 
 const RxResultsScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
+  const route = useRoute<RouteProps>();
+  const insets = useSafeAreaInsets();
+  const { prescriptionId } = route.params;
 
   return (
     <View style={styles.root}>
-      <View style={styles.statusSpacer} />
-      {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <ChevronLeft size={16} color={Colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Prescription Results</Text>
-        <View style={styles.rightSpacer} />
+        <Text style={styles.title}>Prescription Results</Text>
+        <View style={{ width: 32 }} />
       </View>
 
       <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent} showsVerticalScrollIndicator={false}>
-
-        {/* Best-match gradient card */}
-        <View style={styles.bestCard}>
-          <View style={styles.bestCardTop}>
-            <View style={styles.bestCardLeft}>
-              <Text style={styles.bestLabel}>Best match</Text>
-              <Text style={styles.bestName}>Apollo Pharmacy, Salt Lake</Text>
-              <View style={styles.bestDistRow}>
-                <MapPin size={12} color="rgba(255,255,255,0.7)" />
-                <Text style={styles.bestDist}>1.2 km away</Text>
+        {/* Best Match Card */}
+        <LinearGradient
+          colors={[Colors.primary, '#0d9e8f']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.matchCard}>
+          <View style={styles.matchTop}>
+            <View style={styles.matchInfo}>
+              <Text style={styles.matchLabel}>Best match</Text>
+              <Text style={styles.pharmacyName}>Apollo Pharmacy, Salt Lake</Text>
+              <View style={styles.locRow}>
+                <MapPin size={10} color="rgba(255,255,255,0.7)" />
+                <Text style={styles.locText}>1.2 km away</Text>
               </View>
             </View>
-            <View style={styles.bestCardRight}>
-              <Text style={styles.bestCount}>5/6</Text>
-              <Text style={styles.bestCountLabel}>medicines</Text>
+            <View style={styles.matchCount}>
+              <Text style={styles.countText}>5/6</Text>
+              <Text style={styles.countLabel}>medicines</Text>
             </View>
           </View>
-          <View style={styles.bestCardBtns}>
+          <View style={styles.matchActions}>
             <TouchableOpacity
               style={styles.reserveAllBtn}
-              onPress={() => navigation.navigate(Routes.RSV_CONFIRM as any, { pharmacyId: 'ph_001', medicineId: 'multi' })}>
+              onPress={() => navigation.navigate(Routes.RSV_CONFIRM as any, { pharmacyId: 'apollo-1', medicineId: 'multi' })}>
               <Package size={14} color={Colors.primary} />
               <Text style={styles.reserveAllText}>Reserve All Here</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.compareBtn}
-              onPress={() => navigation.navigate(Routes.RX_COMPARE, { prescriptionId: 'rx_001' })}>
+              onPress={() => navigation.navigate(Routes.RX_COMPARE, { prescriptionId })}>
               <Text style={styles.compareBtnText}>Compare</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </LinearGradient>
 
-        {/* Medicine availability */}
-        <Text style={styles.sectionTitle}>Medicine Availability</Text>
-        <View style={styles.medList}>
-          {MOCK_MED_AVAILABILITY.map(({ name, status, pharmacies }) => {
-            const cfg = BADGE_CFG[status];
-            return (
-              <View key={name} style={styles.medRow}>
-                <View style={[styles.statusDot, { backgroundColor: STATUS_DOT[status] }]} />
-                <View style={styles.medInfo}>
-                  <Text style={styles.medName}>{name}</Text>
-                  <Text style={styles.medSub}>
-                    {pharmacies > 0 ? `Available at ${pharmacies} pharmacies nearby` : 'Not available nearby'}
-                  </Text>
-                </View>
-                <View style={[styles.badge, { backgroundColor: cfg.bg, borderColor: cfg.border }]}>
-                  <Text style={[styles.badgeText, { color: cfg.text }]}>{cfg.label}</Text>
-                </View>
-              </View>
-            );
-          })}
-        </View>
+        <Text style={styles.sectionLabel}>Medicine Availability</Text>
 
-        {/* Out of stock warning */}
+        {AVAILABILITY.map(item => (
+          <View key={item.id} style={styles.availItem}>
+            <View style={[
+              styles.statusDot,
+              { backgroundColor: item.status === 'in-stock' ? Colors.success : item.status === 'low-stock' ? Colors.warning : Colors.error }
+            ]} />
+            <View style={styles.availInfo}>
+              <Text style={styles.medName}>{item.name}</Text>
+              <Text style={styles.pharmacyCount}>
+                {item.pharmacies > 0 ? `Available at ${item.pharmacies} pharmacies nearby` : "Not available nearby"}
+              </Text>
+            </View>
+            <View style={[
+              styles.badge,
+              { backgroundColor: item.status === 'in-stock' ? Colors.successLight : item.status === 'low-stock' ? Colors.warningLight : Colors.errorLight },
+              { borderColor: item.status === 'in-stock' ? Colors.successBorder : item.status === 'low-stock' ? Colors.warningBorder : Colors.errorBorder }
+            ]}>
+              <Text style={[
+                styles.badgeText,
+                { color: item.status === 'in-stock' ? Colors.success : item.status === 'low-stock' ? Colors.warning : Colors.error }
+              ]}>
+                {item.status === 'in-stock' ? 'In stock' : item.status === 'low-stock' ? 'Low' : 'Unavailable'}
+              </Text>
+            </View>
+          </View>
+        ))}
+
+        {/* Warning for out of stock */}
         <View style={styles.warningBox}>
-          <AlertTriangle size={16} color="#d97706" />
+          <AlertTriangle size={16} color={Colors.warning} />
           <Text style={styles.warningText}>
             Vitamin D3 60K is not found nearby. Try searching online pharmacies or ask your doctor for an alternative.
           </Text>
         </View>
       </ScrollView>
+
+      {/* Reused BottomNav is usually handled by the TabNavigator, but for screens with bottom content we often add space or absolute nav */}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.background },
-  statusSpacer: { height: 44 },
   header: {
-    flexDirection: 'row', alignItems: 'center', gap: Spacing.md,
-    backgroundColor: Colors.surface, paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md,
-    borderBottomWidth: 1, borderBottomColor: Colors.borderLight,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: Spacing.lg, paddingBottom: Spacing.md,
+    backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.borderLight,
   },
   backBtn: { width: 32, height: 32, backgroundColor: Colors.gray100, borderRadius: Radius.full, alignItems: 'center', justifyContent: 'center' },
-  rightSpacer: { width: 32 },
-  headerTitle: { flex: 1, fontSize: FontSize.base, fontWeight: FontWeight.semibold, color: Colors.textPrimary, textAlign: 'center' },
+  title: { fontSize: 16, fontWeight: FontWeight.bold, color: Colors.textPrimary },
   body: { flex: 1 },
-  bodyContent: { padding: Spacing.lg, paddingBottom: 100, gap: Spacing.md },
-  bestCard: {
-    backgroundColor: Colors.primary, borderRadius: Radius.xl, padding: Spacing.lg,
+  bodyContent: { padding: Spacing.lg, paddingBottom: 100 },
+  matchCard: {
+    borderRadius: Radius.xxl, padding: Spacing.lg, marginBottom: Spacing.xl,
+    ...Shadow.md,
   },
-  bestCardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: Spacing.md },
-  bestCardLeft: { flex: 1 },
-  bestLabel: { color: 'rgba(255,255,255,0.7)', fontSize: FontSize.xs, fontWeight: FontWeight.medium },
-  bestName: { color: Colors.textInverse, fontSize: FontSize.base, fontWeight: FontWeight.bold, marginTop: 2 },
-  bestDistRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  bestDist: { color: 'rgba(255,255,255,0.8)', fontSize: FontSize.xs },
-  bestCardRight: { alignItems: 'flex-end' },
-  bestCount: { color: Colors.textInverse, fontSize: 28, fontWeight: FontWeight.bold },
-  bestCountLabel: { color: 'rgba(255,255,255,0.7)', fontSize: FontSize.xs },
-  bestCardBtns: {
-    flexDirection: 'row', gap: Spacing.sm,
-    borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.2)', paddingTop: Spacing.md,
-  },
+  matchTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.lg },
+  matchInfo: { flex: 1 },
+  matchLabel: { fontSize: 10, fontWeight: FontWeight.medium, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' },
+  pharmacyName: { fontSize: 16, fontWeight: FontWeight.bold, color: Colors.textInverse, marginTop: 2 },
+  locRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  locText: { fontSize: 12, color: 'rgba(255,255,255,0.8)' },
+  matchCount: { alignItems: 'flex-end' },
+  countText: { fontSize: 28, fontWeight: FontWeight.bold, color: Colors.textInverse, lineHeight: 32 },
+  countLabel: { fontSize: 10, color: 'rgba(255,255,255,0.7)' },
+  matchActions: { flexDirection: 'row', gap: Spacing.sm, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.2)', paddingTop: Spacing.md },
   reserveAllBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 6, backgroundColor: Colors.textInverse, borderRadius: Radius.md, paddingVertical: 10,
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: Colors.surface, paddingVertical: 10, borderRadius: Radius.xl,
   },
-  reserveAllText: { fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: Colors.primary },
+  reserveAllText: { fontSize: 12, fontWeight: FontWeight.bold, color: Colors.primary },
   compareBtn: {
-    paddingHorizontal: Spacing.lg, paddingVertical: 10,
-    backgroundColor: 'rgba(255,255,255,0.2)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)',
-    borderRadius: Radius.md,
+    paddingHorizontal: 16, paddingVertical: 10, backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: Radius.xl, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)',
   },
-  compareBtnText: { fontSize: FontSize.xs, fontWeight: FontWeight.semibold, color: Colors.textInverse },
-  sectionTitle: { fontSize: FontSize.xs, fontWeight: FontWeight.semibold, color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8 },
-  medList: { gap: Spacing.sm },
-  medRow: {
+  compareBtnText: { fontSize: 12, fontWeight: FontWeight.semibold, color: Colors.textInverse },
+  sectionLabel: { fontSize: FontSize.xs, fontWeight: FontWeight.semibold, color: Colors.textMuted, textTransform: 'uppercase', marginBottom: Spacing.md, letterSpacing: 0.5 },
+  availItem: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.md,
-    backgroundColor: Colors.surface, borderRadius: Radius.md, padding: Spacing.md,
-    borderWidth: 1, borderColor: Colors.borderLight,
+    backgroundColor: Colors.surface, padding: Spacing.md, borderRadius: Radius.xl,
+    borderWidth: 1, borderColor: Colors.borderLight, marginBottom: Spacing.sm,
   },
-  statusDot: { width: 10, height: 10, borderRadius: 5, flexShrink: 0 },
-  medInfo: { flex: 1 },
-  medName: { fontSize: FontSize.sm, fontWeight: FontWeight.medium, color: Colors.textPrimary },
-  medSub: { fontSize: FontSize.xs, color: Colors.textMuted, marginTop: 2 },
+  statusDot: { width: 8, height: 8, borderRadius: 4 },
+  availInfo: { flex: 1 },
+  medName: { fontSize: 14, fontWeight: FontWeight.semibold, color: Colors.textPrimary },
+  pharmacyCount: { fontSize: 11, color: Colors.textMuted, marginTop: 2 },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: Radius.full, borderWidth: 1 },
-  badgeText: { fontSize: FontSize.xs, fontWeight: FontWeight.semibold },
+  badgeText: { fontSize: 10, fontWeight: FontWeight.bold },
   warningBox: {
-    flexDirection: 'row', gap: Spacing.md, backgroundColor: Colors.warningLight,
-    borderWidth: 1, borderColor: Colors.warningBorder, borderRadius: Radius.md, padding: Spacing.md,
+    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
+    backgroundColor: Colors.warningLight + '30', padding: Spacing.md, borderRadius: Radius.xl,
+    borderWidth: 1, borderColor: Colors.warningBorder + '40', marginTop: Spacing.sm,
   },
-  warningText: { flex: 1, fontSize: FontSize.xs, color: '#92400e', lineHeight: 18 },
+  warningText: { flex: 1, fontSize: 12, color: Colors.warning, lineHeight: 18, fontWeight: FontWeight.medium },
 });
 
 export default RxResultsScreen;

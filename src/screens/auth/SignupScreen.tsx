@@ -89,6 +89,9 @@ const SignupScreen: React.FC = () => {
             placeholderTextColor={Colors.textMuted}
             keyboardType="phone-pad"
             maxLength={10}
+            autoComplete="off"
+            autoCorrect={false}
+            textContentType="telephoneNumber"
           />
         </View>
         {errors.phone ? <Text style={styles.errorText}>{errors.phone}</Text> : null}
@@ -103,6 +106,11 @@ const SignupScreen: React.FC = () => {
           placeholder="Min. 8 characters"
           placeholderTextColor={Colors.textMuted}
           secureTextEntry
+          autoComplete="off"
+          autoCorrect={false}
+          autoCapitalize="none"
+          spellCheck={false}
+          textContentType="newPassword"
         />
         {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
       </View>

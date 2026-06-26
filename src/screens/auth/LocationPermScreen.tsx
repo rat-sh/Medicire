@@ -9,7 +9,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, Eas
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '@/navigation/types';
 import { Routes } from '@/constants/routes';
-import { Colors, FontSize, FontWeight, Spacing, Radius } from '@/constants/theme';
+import { Colors, FontSize, FontWeight, Spacing } from '@/constants/theme';
 import { ScreenLayout } from '@/components/ui/ScreenLayout';
 import { Button } from '@/components/ui/Button';
 import { useLocation } from '@/hooks/useLocation';
@@ -34,8 +34,14 @@ const LocationPermScreen: React.FC = () => {
   const goNext = () => navigation.navigate(Routes.PROFILE_SETUP);
 
   const handleAllow = async () => {
-    await requestLocation();
-    goNext();
+    try {
+      await requestLocation();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_err) {
+      // permission denied or GPS error — still proceed
+    } finally {
+      goNext();
+    }
   };
 
   return (

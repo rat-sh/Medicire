@@ -29,7 +29,7 @@ export type SearchStackParamList = {
   [Routes.RSV_CONFIRM]: { pharmacyId: string; medicineId: string };
   [Routes.RSV_STATUS]: {
     reservationId: string;
-    status: 'pending' | 'confirmed' | 'ready' | 'cancelled' | 'completed';
+    status: 'pending' | 'confirmed' | 'ready' | 'out_for_delivery' | 'cancelled' | 'completed';
   };
 };
 
@@ -55,6 +55,11 @@ export type VaultStackParamList = {
   [Routes.RX_REVIEW]: { prescriptionId: string };
   [Routes.RX_RESULTS]: { prescriptionId: string };
   [Routes.RX_COMPARE]: { prescriptionId: string };
+  [Routes.RSV_CONFIRM]: { pharmacyId: string; medicineId: string };
+  [Routes.RSV_STATUS]: {
+    reservationId: string;
+    status: 'pending' | 'confirmed' | 'ready' | 'out_for_delivery' | 'cancelled' | 'completed';
+  };
 };
 
 // ─── Reservation Stack ────────────────────────────────────────────────────────
@@ -62,7 +67,7 @@ export type ReservationStackParamList = {
   [Routes.RSV_TRACKER]: undefined;
   [Routes.RSV_STATUS]: {
     reservationId: string;
-    status: 'pending' | 'confirmed' | 'ready' | 'cancelled' | 'completed';
+    status: 'pending' | 'confirmed' | 'ready' | 'out_for_delivery' | 'cancelled' | 'completed';
   };
   [Routes.RSV_CONFIRM]: { pharmacyId: string; medicineId: string };
 };

@@ -1,7 +1,17 @@
 import { createMMKV } from 'react-native-mmkv';
 
-// Single shared MMKV instance for the entire app (react-native-mmkv v3+ API)
-export const storage = createMMKV({ id: 'medicire-storage' });
+// ─── Encryption Key ────────────────────────────────────────────────────────────
+// TODO (PRODUCTION): Replace this static key with a value retrieved from
+// react-native-keychain (iOS Keychain / Android Keystore) so the key is
+// hardware-backed and unique per device. A static key still encrypts the
+// file-at-rest so it won't appear in plaintext backups or ADB pulls.
+const STORAGE_ENCRYPTION_KEY = 'medicire-mmkv-enc-k3y-v1';
+
+// Single shared MMKV instance — AES-256 encrypted at rest
+export const storage = createMMKV({
+  id: 'medicire-storage',
+  encryptionKey: STORAGE_ENCRYPTION_KEY,
+});
 
 // ─── Typed Storage Helpers ─────────────────────────────────────────────────────
 

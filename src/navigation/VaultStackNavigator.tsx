@@ -12,6 +12,8 @@ import RxOcrScreen from '@/screens/prescription/RxOcrScreen';
 import RxReviewScreen from '@/screens/prescription/RxReviewScreen';
 import RxResultsScreen from '@/screens/prescription/RxResultsScreen';
 import RxCompareScreen from '@/screens/prescription/RxCompareScreen';
+import ReservationConfirmScreen from '@/screens/reservations/ReservationConfirmScreen';
+import ReservationStatusScreen from '@/screens/reservations/ReservationStatusScreen';
 
 const Stack = createNativeStackNavigator<VaultStackParamList>();
 
@@ -28,6 +30,8 @@ const VaultStackNavigator: React.FC = () => (
     <Stack.Screen name={Routes.RX_REVIEW} component={RxReviewScreen} />
     <Stack.Screen name={Routes.RX_RESULTS} component={RxResultsScreen} />
     <Stack.Screen name={Routes.RX_COMPARE} component={RxCompareScreen} />
+    <Stack.Screen name={Routes.RSV_CONFIRM} component={ReservationConfirmScreen} />
+    <Stack.Screen name={Routes.RSV_STATUS}  component={ReservationStatusScreen} />
   </Stack.Navigator>
 );
 

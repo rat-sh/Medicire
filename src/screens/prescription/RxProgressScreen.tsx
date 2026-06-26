@@ -1,97 +1,118 @@
 /**
- * RxProgressScreen.tsx
- * Figma: "Upload Progress" — circular progress ring animating from 67→100%,
- *        then auto-navigates to rx-ocr
- * Mock: Animates with setTimeout
- * Real API: Show real upload progress from multipart upload
- * MOCK_MARKER: Replace simulated progress with real upload progress event
+ * RxProgressScreen.tsx — Figma: "Upload Progress"
+ * Circular progress bar with percentage, auto-nav to RxOcr when done.
  */
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import Svg, { Circle } from 'react-native-svg';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { Svg, Circle } from 'react-native-svg';
 import { Shield } from 'lucide-react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { VaultStackParamList } from '@/navigation/types';
 import { Routes } from '@/constants/routes';
 import { Colors, FontSize, FontWeight, Spacing } from '@/constants/theme';
-import { Config } from '@/constants/config';
+import { ScreenLayout } from '@/components/ui/ScreenLayout';
 
 type Nav = NativeStackNavigationProp<VaultStackParamList>;
 
-const RADIUS = 40;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-
 const RxProgressScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
-  const [progress, setProgress] = useState(67);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    if (Config.USE_MOCK) {
-      // ── MOCK_MARKER: Replace with real upload progress callback ───────────
-      if (progress < 100) {
-        const t = setTimeout(() => setProgress(p => Math.min(p + 5, 100)), 300);
-        return () => clearTimeout(t);
-      } else {
-        const t = setTimeout(() => navigation.navigate(Routes.RX_OCR, { prescriptionId: 'rx_mock' }), 600);
-        return () => clearTimeout(t);
-      }
-    }
-  }, [progress, navigation]);
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setTimeout(() => navigation.navigate(Routes.RX_OCR, { prescriptionId: 'mock-rx-id' }), 500);
+          return 100;
+        }
+        return prev + 5;
+      });
+    }, 150);
+    return () => clearInterval(interval);
+  }, [navigation]);
 
-  const strokeDashoffset = CIRCUMFERENCE * (1 - progress / 100);
+  const size = 120;
+  const strokeWidth = 8;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (progress / 100) * circumference;
 
   return (
-    <View style={styles.root}>
-      <View style={styles.statusSpacer} />
-      <View style={styles.center}>
-        {/* Circular progress ring */}
-        <View style={styles.ringWrap}>
-          <Svg width={96} height={96} viewBox="0 0 96 96" style={{ transform: [{ rotate: '-90deg' }] }}>
-            {/* Track */}
-            <Circle cx={48} cy={48} r={RADIUS} fill="none" stroke={Colors.primaryLight} strokeWidth={8} />
-            {/* Progress */}
+    <ScreenLayout backgroundColor={Colors.surface}>
+      <View style={styles.content}>
+        <View style={styles.progressContainer}>
+          <Svg width={size} height={size} style={styles.svg}>
+            {/* Background Circle */}
             <Circle
-              cx={48} cy={48} r={RADIUS}
-              fill="none" stroke={Colors.primary} strokeWidth={8}
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke={Colors.primaryLight}
+              strokeWidth={strokeWidth}
+              fill="none"
+            />
+            {/* Progress Circle */}
+            <Circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke={Colors.primary}
+              strokeWidth={strokeWidth}
+              fill="none"
+              strokeDasharray={circumference}
+              strokeDashoffset={offset}
               strokeLinecap="round"
-              strokeDasharray={CIRCUMFERENCE}
-              strokeDashoffset={strokeDashoffset}
             />
           </Svg>
-          <View style={styles.ringCenter}>
-            <Text style={styles.progressText}>{progress}%</Text>
+          <View style={styles.labelContainer}>
+            <Text style={styles.percentText}>{progress}%</Text>
           </View>
         </View>
 
-        <Text style={styles.heading}>Uploading prescription</Text>
-        <Text style={styles.sub}>
+        <Text style={styles.title}>Uploading prescription</Text>
+        <Text style={styles.subtitle}>
           Please keep the app open while we upload your prescription securely.
         </Text>
 
-        <View style={styles.encryptedRow}>
+        <View style={styles.badge}>
           <Shield size={14} color={Colors.primary} />
-          <Text style={styles.encryptedText}>End-to-end encrypted upload</Text>
+          <Text style={styles.badgeText}>End-to-end encrypted upload</Text>
         </View>
       </View>
-    </View>
+    </ScreenLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.surface },
-  statusSpacer: { height: 44 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.xxxl },
-  ringWrap: { width: 96, height: 96, marginBottom: Spacing['4xl'], position: 'relative' },
-  ringCenter: {
-    position: 'absolute', inset: 0, top: 0, left: 0, right: 0, bottom: 0,
+  content: {
+    flex: 1, alignItems: 'center', justifyContent: 'center',
+    paddingHorizontal: Spacing['3xl'],
+  },
+  progressContainer: {
+    width: 120, height: 120, marginBottom: Spacing['2xl'],
     alignItems: 'center', justifyContent: 'center',
   },
-  progressText: { fontSize: FontSize.xl, fontWeight: FontWeight.bold, color: Colors.textPrimary },
-  heading: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.textPrimary, marginBottom: Spacing.sm },
-  sub: { fontSize: FontSize.sm, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20, marginBottom: Spacing.xl },
-  encryptedRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  encryptedText: { fontSize: FontSize.xs, color: Colors.textSecondary },
+  svg: { transform: [{ rotate: '-90deg' }] },
+  labelContainer: { position: 'absolute' },
+  percentText: {
+    fontSize: 24, fontWeight: FontWeight.bold,
+    color: Colors.textPrimary, fontVariant: ['tabular-nums'],
+  },
+  title: {
+    fontSize: FontSize.lg, fontWeight: FontWeight.bold,
+    color: Colors.textPrimary, marginBottom: Spacing.xs,
+  },
+  subtitle: {
+    fontSize: FontSize.sm, color: Colors.textSecondary,
+    textAlign: 'center', lineHeight: 22,
+  },
+  badge: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    marginTop: Spacing['2xl'],
+  },
+  badgeText: { fontSize: 12, color: Colors.textMuted },
 });
 
 export default RxProgressScreen;

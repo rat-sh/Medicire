@@ -3,7 +3,7 @@
  * Figma: "Splash Screen" — gradient bg, logo, tagline, dots
  */
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Animated, {
   useSharedValue,
@@ -67,11 +67,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ autoNavigate = true }) => {
       style={styles.container}>
       <View style={styles.center}>
         <Animated.View style={[styles.logoBox, logoStyle]}>
-          <View style={styles.logoInner}>
-            <View style={[styles.bar, styles.barTall]} />
-            <View style={[styles.bar, styles.barMid]} />
-            <View style={[styles.bar, styles.barShort]} />
-          </View>
+          <Image source={require('../../../assets/img/logo2.png')} style={styles.logoImage} resizeMode="contain" />
         </Animated.View>
 
         <Animated.View style={[styles.textBlock, textStyle]}>
@@ -98,20 +94,15 @@ const styles = StyleSheet.create({
   },
   center: { alignItems: 'center', gap: Spacing.xl },
   logoBox: {
-    width: 80,
-    height: 80,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 28,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+    width: 120,
+    height: 120,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  logoInner: { flexDirection: 'row', alignItems: 'flex-end', gap: 4 },
-  bar: { width: 10, backgroundColor: Colors.textInverse, borderRadius: 5 },
-  barTall: { height: 32 },
-  barMid: { height: 20, opacity: 0.6 },
-  barShort: { height: 24, opacity: 0.8 },
+  logoImage: {
+    width: '100%',
+    height: '100%',
+  },
   textBlock: { alignItems: 'center', gap: 4 },
   appName: {
     fontSize: FontSize['4xl'],

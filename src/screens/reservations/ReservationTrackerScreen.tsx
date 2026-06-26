@@ -6,7 +6,8 @@ import {
   View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ChevronRight, Package, MapPin } from 'lucide-react-native';
+import { ChevronRight, Package, MapPin, Truck, ShoppingBag } from 'lucide-react-native';
+import { BADGE_CFG } from '@/constants/reservation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ReservationStackParamList } from '@/navigation/types';
@@ -15,17 +16,11 @@ import { Colors, FontSize, FontWeight, Spacing, Radius } from '@/constants/theme
 import { useReservations } from '@/hooks/useReservations';
 import { ApiStateView } from '@/components/ui/ApiStateView';
 import { formatDate } from '@/utils/formatters';
-import type { Reservation, ReservationStatus } from '@/types/reservation';
+import type { Reservation } from '@/types/reservation';
 
 type Nav = NativeStackNavigationProp<ReservationStackParamList>;
 
-const BADGE_CFG: Record<ReservationStatus, { label: string; bg: string; border: string; text: string }> = {
-  pending: { label: 'Pending', bg: Colors.warningLight, border: Colors.warningBorder, text: Colors.warning },
-  confirmed: { label: 'Confirmed', bg: Colors.successLight, border: Colors.successBorder, text: Colors.success },
-  ready: { label: 'Ready', bg: Colors.infoLight, border: Colors.infoBorder, text: Colors.info },
-  cancelled: { label: 'Cancelled', bg: Colors.errorLight, border: Colors.errorBorder, text: Colors.error },
-  completed: { label: 'Completed', bg: Colors.gray100, border: Colors.gray200, text: Colors.gray500 },
-};
+
 
 const ReservationTrackerScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
@@ -35,7 +30,6 @@ const ReservationTrackerScreen: React.FC = () => {
 
   const renderItem = ({ item }: { item: Reservation }) => {
     const badge = BADGE_CFG[item.status];
-    const totalPrice = item.pricePerUnit * item.quantity;
 
     return (
       <TouchableOpacity
@@ -45,7 +39,9 @@ const ReservationTrackerScreen: React.FC = () => {
           status: item.status,
         })}>
         <View style={styles.iconBox}>
-          <Package size={18} color={Colors.primary} />
+          {item.deliveryMode === 'delivery'
+            ? <Truck size={18} color={Colors.primary} />
+            : <Package size={18} color={Colors.primary} />}
         </View>
         <View style={styles.cardInfo}>
           <Text style={styles.medName}>{item.medicineName}</Text>
@@ -53,13 +49,21 @@ const ReservationTrackerScreen: React.FC = () => {
             <MapPin size={10} color={Colors.textMuted} />
             <Text style={styles.metaText} numberOfLines={1}>{item.pharmacyName}</Text>
           </View>
+          <View style={styles.metaRow}>
+            {item.deliveryMode === 'delivery'
+              ? <Truck size={9} color={Colors.primary} />
+              : <ShoppingBag size={9} color={Colors.textMuted} />}
+            <Text style={[styles.metaText, item.deliveryMode === 'delivery' && { color: Colors.primary }]}>
+              {item.deliveryMode === 'delivery' ? 'Home Delivery' : 'Store Pickup'}
+            </Text>
+          </View>
           <Text style={styles.dateText}>{formatDate(item.createdAt)}</Text>
         </View>
         <View style={styles.cardRight}>
           <View style={[styles.badge, { backgroundColor: badge.bg, borderColor: badge.border }]}>
             <Text style={[styles.badgeText, { color: badge.text }]}>{badge.label}</Text>
           </View>
-          <Text style={styles.priceText}>₹{totalPrice}</Text>
+          <Text style={styles.priceText}>₹{(item.pricePerUnit * item.quantity) + (item.deliveryFare ?? 0)}</Text>
           <ChevronRight size={14} color={Colors.textMuted} />
         </View>
       </TouchableOpacity>
