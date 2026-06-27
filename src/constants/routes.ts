@@ -3,6 +3,7 @@
 
 export const Routes = {
   // Auth Stack
+  ONBOARDING: 'Onboarding',
   SPLASH: 'Splash',
   LOGIN: 'Login',
   SIGNUP: 'Signup',

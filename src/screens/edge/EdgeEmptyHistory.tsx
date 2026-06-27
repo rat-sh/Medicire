@@ -1,1 +1,1 @@
-export { EmptyHistoryScreen as default } from './EdgeCaseScreens';
+export { EmptyHistoryScreen as default } from './SystemEdgeCases';

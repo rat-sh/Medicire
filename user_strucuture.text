@@ -1,7 +1,7 @@
 Medicire — Mobile App Project Structure
-Setting up a scalable, clean-architecture React Native CLI project structure matching the approved Figma designs (50 screens) with the full tech stack.
+Current scalable, clean-architecture React Native project structure matching the Figma designs.
 
-Proposed Folder Structure
+Project Structure
 
 Medicire/
 ├── src/
@@ -12,10 +12,10 @@ Medicire/
 │   │   ├── RootNavigator.tsx      # Stack: Auth | Main
 │   │   ├── AuthNavigator.tsx      # Splash → Login → Signup → OTP → ...
 │   │   ├── MainNavigator.tsx      # Bottom Tab Navigator
-│   │   ├── HomeStackNavigator.tsx
 │   │   ├── SearchStackNavigator.tsx
 │   │   ├── RxStackNavigator.tsx   # Prescription flow
 │   │   ├── VaultStackNavigator.tsx
+│   │   ├── ProfileStackNavigator.tsx
 │   │   ├── ReservationStackNavigator.tsx
 │   │   └── types.ts               # All RootParamList types
 │   │
@@ -49,16 +49,16 @@ Medicire/
 │   │   │   └── VaultDetailScreen.tsx
 │   │   ├── reservations/
 │   │   │   ├── ReservationConfirmScreen.tsx
-│   │   │   ├── ReservationStatusScreen.tsx  # handles pending/confirmed/ready/cancelled/completed
+│   │   │   ├── ReservationStatusScreen.tsx
 │   │   │   └── ReservationTrackerScreen.tsx
-│   │   ├── account/
-│   │   │   ├── NotificationsScreen.tsx
+│   │   ├── profile/
 │   │   │   ├── ProfileScreen.tsx
 │   │   │   ├── SettingsScreen.tsx
 │   │   │   ├── AddressesScreen.tsx
 │   │   │   ├── ConditionsScreen.tsx
 │   │   │   ├── NotifPrefsScreen.tsx
-│   │   │   └── DeleteAccountScreen.tsx
+│   │   │   ├── DeleteAccountScreen.tsx
+│   │   │   └── NotificationsScreen.tsx
 │   │   └── edge/
 │   │       ├── EdgeNoPharmacies.tsx
 │   │       ├── EdgeNoMedicine.tsx
@@ -73,7 +73,8 @@ Medicire/
 │   │       ├── EdgeMultiPharmacy.tsx
 │   │       ├── EdgeUploadTimeout.tsx
 │   │       ├── EdgeEmptyVault.tsx
-│   │       └── EdgeEmptyHistory.tsx
+│   │       ├── EdgeEmptyHistory.tsx
+│   │       └── EdgeCaseScreens.tsx
 │   │
 │   ├── components/
 │   │   ├── ui/                    # Reusable primitive components
@@ -81,25 +82,31 @@ Medicire/
 │   │   │   ├── Input.tsx
 │   │   │   ├── Badge.tsx
 │   │   │   ├── Card.tsx
-│   │   │   ├── BottomSheet.tsx
 │   │   │   ├── EmptyState.tsx
 │   │   │   ├── LoadingSpinner.tsx
-│   │   │   └── StatusBarComponent.tsx
+│   │   │   ├── ApiStateView.tsx
+│   │   │   └── ScreenLayout.tsx
 │   │   ├── pharmacy/
-│   │   │   ├── PharmacyCard.tsx
-│   │   │   └── PharmacyMapPin.tsx
+│   │   │   └── PharmacyCard.tsx
 │   │   ├── reservation/
+│   │   │   ├── index.ts
+│   │   │   ├── BillSummary.tsx
+│   │   │   ├── OrderTimeline.tsx
+│   │   │   ├── ParcelInfoCard.tsx
+│   │   │   ├── OrderStatusHero.tsx
+│   │   │   ├── PharmacyContactCard.tsx
+│   │   │   ├── DeliveryModeSelector.tsx
+│   │   │   ├── PickupWindowSelector.tsx
 │   │   │   └── ReservationStatusBadge.tsx
-│   │   ├── prescription/
-│   │   │   └── OcrStageItem.tsx
+│   │   ├── map/
+│   │   │   └── MapPreview.tsx
 │   │   └── navigation/
 │   │       └── BottomNav.tsx
 │   │
 │   ├── store/                     # Zustand stores
 │   │   ├── authStore.ts
 │   │   ├── locationStore.ts
-│   │   ├── searchStore.ts
-│   │   └── reservationStore.ts
+│   │   └── searchStore.ts
 │   │
 │   ├── services/                  # API + external services
 │   │   ├── api/
@@ -108,22 +115,22 @@ Medicire/
 │   │   │   ├── pharmacies.ts
 │   │   │   ├── medicines.ts
 │   │   │   ├── reservations.ts
-│   │   │   ├── prescriptions.ts
-│   │   │   └── notifications.ts
-│   │   ├── socket/
-│   │   │   └── socketClient.ts    # Socket.io client
+│   │   │   ├── supabaseClient.ts
+│   │   │   └── mock/              # Mock data for local development
 │   │   ├── storage/
 │   │   │   └── mmkv.ts            # MMKV storage instance
+│   │   ├── socket/
 │   │   └── cloudinary/
-│   │       └── upload.ts          # Image upload helper
 │   │
 │   ├── hooks/                     # Custom React hooks
 │   │   ├── useAuth.ts
 │   │   ├── useLocation.ts
-│   │   ├── usePharmacies.ts       # TanStack Query hooks
+│   │   ├── usePharmacies.ts
 │   │   ├── useReservations.ts
-│   │   ├── usePrescriptions.ts
-│   │   └── useSocket.ts
+│   │   ├── usePharmacyDetail.ts
+│   │   ├── usePharmacySearch.ts
+│   │   ├── useRecentSearches.ts
+│   │   └── usePopularSearches.ts
 │   │
 │   ├── types/                     # Global TypeScript types
 │   │   ├── api.ts
@@ -134,91 +141,46 @@ Medicire/
 │   │   └── user.ts
 │   │
 │   ├── constants/
-│   │   ├── theme.ts               # Colors, spacing, radius, typography from Figma
+│   │   ├── theme.ts               # Colors, spacing, radius, typography
 │   │   ├── routes.ts              # Route name constants
-│   │   └── config.ts              # API URLs, Cloudinary keys, etc.
+│   │   ├── config.ts              # API URLs, keys, etc.
+│   │   ├── profile.ts
+│   │   └── reservation.ts
 │   │
 │   └── utils/
 │       ├── scale.ts               # Screen-size scaling utility
 │       ├── formatters.ts          # Distance, currency, date formatters
-│       └── validators.ts          # Zod schemas
+│       ├── validators.ts          # Zod schemas
+│       ├── greeting.ts
+│       ├── imagePicker.ts
+│       ├── navParamGuards.ts
+│       └── reservationUtils.ts
 │
 ├── android/
 ├── ios/
-├── index.js                       # Entry point (unchanged)
-├── App.tsx                        # Replace with navigation root
+├── index.js
+├── App.tsx
 ├── package.json
 ├── tsconfig.json
 └── babel.config.js
 
 
-Packages to Install
-Core Navigation
-bash
+Installed Packages
+- Core Navigation: @react-navigation/native, @react-navigation/native-stack, @react-navigation/bottom-tabs
+- State Management: zustand
+- Server State: @tanstack/react-query, axios
+- Forms & Validation: react-hook-form, zod, @hookform/resolvers
+- Storage: react-native-mmkv
+- Animations: react-native-reanimated, react-native-gesture-handler
+- Maps & Geolocation: react-native-maps, react-native-geolocation-service
+- Real-time: socket.io-client
+- Image Picker: react-native-image-picker
+- Icons: lucide-react-native
+- UI: react-native-svg, react-native-linear-gradient
+- Backend: @supabase/supabase-js
 
-bun add @react-navigation/native @react-navigation/native-stack @react-navigation/bottom-tabs react-native-screens react-native-safe-area-context
-State Management
-bash
-
-bun add zustand
-Server State
-bash
-
-bun add @tanstack/react-query axios
-Forms & Validation
-bash
-
-bun add react-hook-form zod @hookform/resolvers
-Storage
-bash
-
-bun add react-native-mmkv
-Animations
-bash
-
-bun add react-native-reanimated react-native-gesture-handler
-Maps
-bash
-
-bun add react-native-maps
-Real-time
-bash
-
-bun add socket.io-client
-Image Picker & Upload
-bash
-
-bun add react-native-image-picker
-Icons
-bash
-
-bun add lucide-react-native react-native-svg
-Notifications (FCM)
-bash
-
-bun add @react-native-firebase/app @react-native-firebase/messaging
-Configuration Files to Create/Update
-File	What changes
-babel.config.js	Add Reanimated plugin (must be last)
-tsconfig.json	Add path aliases (@/)
-metro.config.js	Add SVG transformer
-src/constants/theme.ts	Extract all colors/spacing from Figma
-android/app/build.gradle	Add Firebase, MMKV config
-Build Order (Step by Step)
-Install all packages
-Setup babel.config.js — Reanimated plugin
-Setup tsconfig.json — path aliases
-Create src/constants/theme.ts — Figma tokens (colors, spacing, etc.)
-Create src/utils/scale.ts — responsive scaling
-Create src/services/storage/mmkv.ts — storage instance
-Create all Zustand stores (auth, location, search)
-Build navigation skeleton — all navigators with placeholder screens
-Wire up App.tsx → providers → navigators
-Build UI primitives (Button, Input, Badge, Card, etc.) from Figma
-Then build screens one by one, starting from Auth flow
-
-The whole app desighn based on 'figma_Complete_App_Screen_Designs'. Follow this design strictly. 
-As its build in react and ts, you need to convert react to react native code and build it properly 
+The whole app design is based on 'figma_Complete_App_Screen_Designs'. Follow this design strictly.
+Converted React code to React Native properly with clean architecture.
 
 
 USER (PATIENT) SIDE — Detailed Feature Specification

@@ -1,1 +1,1 @@
-export { MultiPharmacyScreen as default } from './EdgeCaseScreens';
+export { MultiPharmacyScreen as default } from './SearchEdgeCases';

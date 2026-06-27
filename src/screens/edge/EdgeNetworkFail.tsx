@@ -1,1 +1,1 @@
-export { NetworkFailScreen as default } from './EdgeCaseScreens';
+export { NetworkFailScreen as default } from './SystemEdgeCases';

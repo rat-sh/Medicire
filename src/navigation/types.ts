@@ -4,6 +4,7 @@ import { Routes } from '@/constants/routes';
 
 // ─── Auth Stack ───────────────────────────────────────────────────────────────
 export type AuthStackParamList = {
+  [Routes.ONBOARDING]: undefined;
   [Routes.SPLASH]: undefined;
   [Routes.LOGIN]: undefined;
   [Routes.SIGNUP]: undefined;

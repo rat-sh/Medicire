@@ -5,6 +5,11 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native';
 import RootNavigator from '@/navigation/RootNavigator';
+import { initMappls } from '@/services/mappls/mapplsInit';
+
+// ─── Initialise Mappls SDK (MapMyIndia) ────────────────────────────────────────
+// Must be called once before any MapView is mounted.
+initMappls();
 
 const queryClient = new QueryClient({
   defaultOptions: {

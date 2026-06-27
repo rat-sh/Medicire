@@ -1,1 +1,1 @@
-export { RsvRejectedScreen as default } from './EdgeCaseScreens';
+export { RsvRejectedScreen as default } from './SystemEdgeCases';

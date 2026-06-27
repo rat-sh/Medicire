@@ -1,1 +1,1 @@
-export { LocationDeniedScreen as default } from './EdgeCaseScreens';
+export { LocationDeniedScreen as default } from './SystemEdgeCases';

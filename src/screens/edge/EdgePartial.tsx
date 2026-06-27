@@ -1,1 +1,1 @@
-export { PartialFulfillmentScreen as default } from './EdgeCaseScreens';
+export { PartialFulfillmentScreen as default } from './SearchEdgeCases';

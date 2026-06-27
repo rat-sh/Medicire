@@ -1,1 +1,1 @@
-export { NoMedicineScreen as default } from './EdgeCaseScreens';
+export { NoMedicineScreen as default } from './SearchEdgeCases';

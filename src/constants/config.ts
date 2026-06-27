@@ -24,8 +24,12 @@ export const Config = {
   CLOUDINARY_CLOUD_NAME:    RNConfig.CLOUDINARY_CLOUD_NAME   ?? 'medicire',
   CLOUDINARY_UPLOAD_PRESET: RNConfig.CLOUDINARY_UPLOAD_PRESET ?? 'rx_uploads',
 
-  // ─── Maps ───────────────────────────────────────────────────────────────────
-  MAP_PROVIDER: 'osm' as const,
+  // ─── Maps (Mappls / MapMyIndia) ───────────────────────────────────────────
+  // .env: MAPPLS_MAP_SDK_KEY  MAPPLS_CLIENT_ID  MAPPLS_CLIENT_SECRET
+  MAP_PROVIDER: 'mappls' as const,
+  MAPPLS_MAP_SDK_KEY:     RNConfig.MAPPLS_MAP_SDK_KEY     ?? 'c71f639ff671c72d2e5e6016b197ced6',
+  MAPPLS_CLIENT_ID:       RNConfig.MAPPLS_CLIENT_ID       ?? '',
+  MAPPLS_CLIENT_SECRET:   RNConfig.MAPPLS_CLIENT_SECRET   ?? '',
 
   // ─── App ────────────────────────────────────────────────────────────────────
   APP_NAME: 'Medicire',

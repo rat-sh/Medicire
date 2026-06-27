@@ -1,1 +1,1 @@
-export { OutOfStockScreen as default } from './EdgeCaseScreens';
+export { OutOfStockScreen as default } from './SearchEdgeCases';

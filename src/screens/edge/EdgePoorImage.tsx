@@ -1,1 +1,1 @@
-export { PoorImageScreen as default } from './EdgeCaseScreens';
+export { PoorImageScreen as default } from './SystemEdgeCases';

@@ -1,1 +1,1 @@
-export { NoPharmaciesScreen as default } from './EdgeCaseScreens';
+export { NoPharmaciesScreen as default } from './SearchEdgeCases';

@@ -22,17 +22,16 @@ export const useLocation = () => {
       let hasPerm = false;
 
       if (Platform.OS === 'android') {
-        const granted = await PermissionsAndroid.request(
+        const grants = await PermissionsAndroid.requestMultiple([
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            title: 'Location Permission',
-            message: 'Medicire needs access to your location to find nearby pharmacies.',
-            buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
-          },
-        );
-        hasPerm = granted === PermissionsAndroid.RESULTS.GRANTED;
+          PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+        ]);
+        // Granted if either fine or coarse was accepted
+        hasPerm =
+          grants[PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION] ===
+            PermissionsAndroid.RESULTS.GRANTED ||
+          grants[PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION] ===
+            PermissionsAndroid.RESULTS.GRANTED;
       } else {
         const status = await Geolocation.requestAuthorization('whenInUse');
         hasPerm = status === 'granted';

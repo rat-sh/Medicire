@@ -1,1 +1,1 @@
-export { OcrFailScreen as default } from './EdgeCaseScreens';
+export { OcrFailScreen as default } from './SystemEdgeCases';

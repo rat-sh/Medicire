@@ -1,1 +1,1 @@
-export { PharmacyClosedScreen as default } from './EdgeCaseScreens';
+export { PharmacyClosedScreen as default } from './SystemEdgeCases';

@@ -1,1 +1,1 @@
-export { EmptyVaultScreen as default } from './EdgeCaseScreens';
+export { EmptyVaultScreen as default } from './SystemEdgeCases';

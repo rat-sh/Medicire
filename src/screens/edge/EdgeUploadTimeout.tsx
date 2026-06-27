@@ -1,1 +1,1 @@
-export { UploadTimeoutScreen as default } from './EdgeCaseScreens';
+export { UploadTimeoutScreen as default } from './SystemEdgeCases';
